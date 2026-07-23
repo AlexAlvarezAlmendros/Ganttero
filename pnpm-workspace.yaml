@@ -1,0 +1,4 @@
+# El spike (Fase 0) queda fuera a propósito: es un prototipo aislado con su propio lockfile.
+packages:
+  - frontend
+  - backend

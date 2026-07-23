@@ -36,7 +36,10 @@ export const capturedItemSchema = z
 			item.start_date === null ||
 			item.end_date === null ||
 			item.start_date <= item.end_date,
-		{ message: "end_date no puede ser anterior a start_date", path: ["end_date"] },
+		{
+			message: "end_date no puede ser anterior a start_date",
+			path: ["end_date"],
+		},
 	);
 
 export type CapturedItem = z.infer<typeof capturedItemSchema>;
