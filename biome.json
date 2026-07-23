@@ -6,7 +6,7 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignore": ["node_modules", "dist", ".venv", "pnpm-lock.yaml"]
+		"ignore": ["node_modules", "dist", ".venv", "pnpm-lock.yaml", "docs/design"]
 	},
 	"formatter": {
 		"enabled": true,

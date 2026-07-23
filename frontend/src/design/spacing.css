@@ -1,0 +1,17 @@
+/* Espejo de tokens/spacing.css del design system. */
+:root {
+	--sp-1: 4px;
+	--sp-2: 8px;
+	--sp-3: 12px;
+	--sp-4: 16px;
+	--sp-5: 24px;
+	--sp-6: 30px;
+	--sp-7: 40px;
+	--sp-8: 64px;
+	--pad-btn: 15px 22px;
+	--pad-btn-sm: 8px 13px;
+	--pad-tag: 3px 8px;
+	--pad-cell: 11px 16px;
+	--container-max: 1200px;
+	--header-h: 64px;
+}
