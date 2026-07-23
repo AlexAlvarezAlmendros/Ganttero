@@ -20,6 +20,7 @@ import {
 	useUpdateProject,
 } from "./api/projects.js";
 import type { Item, ItemStatus, Project } from "./api/types.js";
+import { GanttView } from "./components/GanttView.js";
 import { ItemDialog } from "./components/ItemDialog.js";
 import { KanbanBoard } from "./components/KanbanBoard.js";
 import { ProjectDelete } from "./components/ProjectDelete.js";
@@ -30,8 +31,8 @@ import { Button } from "./components/ds/Button.js";
 import { IconButton } from "./components/ds/IconButton.js";
 import { Toast } from "./components/ds/Toast.js";
 import { TopBar } from "./components/ds/TopBar.js";
+import { addDays } from "./lib/gantt.js";
 import { AjustesPage } from "./pages/AjustesPage.js";
-import { GanttPage } from "./pages/GanttPage.js";
 
 const NAV = [
 	{ id: "kanban", label: "KANBAN" },
@@ -49,6 +50,8 @@ export function App() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const view = location.pathname.replace("/", "") || "kanban";
+	// "hoy" se resuelve una sola vez en el borde de la UI y se inyecta hacia dentro.
+	const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
 	const [toast, setToast] = useState<string | null>(null);
 	const [projectId, setProjectId] = useState<number | null>(null);
@@ -177,7 +180,36 @@ export function App() {
 							/>
 						}
 					/>
-					<Route path="/gantt" element={<GanttPage />} />
+					<Route
+						path="/gantt"
+						element={
+							<GanttView
+								items={items.data ?? []}
+								today={today}
+								onOpen={setOpenTask}
+								onMove={(item, days) =>
+									updateItem.mutate(
+										{
+											id: item.id,
+											start_date: item.start_date
+												? addDays(item.start_date, days)
+												: null,
+											end_date: item.end_date
+												? addDays(item.end_date, days)
+												: null,
+										},
+										{
+											onSuccess: (moved) =>
+												setToast(
+													`${moved.key} → ${moved.start_date} · el kanban se derivará solo`,
+												),
+											onError: (error) => setToast(`error: ${error.message}`),
+										},
+									)
+								}
+							/>
+						}
+					/>
 					<Route path="/ajustes" element={<AjustesPage />} />
 				</Routes>
 			</main>
