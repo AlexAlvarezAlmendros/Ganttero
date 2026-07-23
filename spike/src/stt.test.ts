@@ -27,14 +27,10 @@ describe("sttResultSchema", () => {
 
 // Smoke test real contra el venv + audios del spike (no corre sin ellos).
 describe("transcribe (integración)", () => {
-	it(
-		"transcribe el audio 1 de prueba",
-		{ timeout: 120_000 },
-		async () => {
-			const audio = new URL("../audios/1.aac", import.meta.url).pathname;
-			const result = await transcribe(audio);
-			expect(result.language).toBe("es");
-			expect(result.text.toLowerCase()).toContain("radio");
-		},
-	);
+	it("transcribe el audio 1 de prueba", { timeout: 120_000 }, async () => {
+		const audio = new URL("../audios/1.aac", import.meta.url).pathname;
+		const result = await transcribe(audio);
+		expect(result.language).toBe("es");
+		expect(result.text.toLowerCase()).toContain("radio");
+	});
 });

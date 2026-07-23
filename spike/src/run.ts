@@ -31,7 +31,10 @@ interface CaptureConfig {
 	model?: string;
 }
 
-async function captureOne(audio: string, config: CaptureConfig): Promise<CaptureRow> {
+async function captureOne(
+	audio: string,
+	config: CaptureConfig,
+): Promise<CaptureRow> {
 	const started = performance.now();
 	const stt = await transcribe(audio);
 	const sttDone = performance.now();
@@ -107,7 +110,9 @@ for (const audio of positionals) {
 		}`,
 	);
 	console.error(`  «${row.transcript}»`);
-	console.log(JSON.stringify({ audio: row.audio, ok: row.ok, item: row.item }, null, 2));
+	console.log(
+		JSON.stringify({ audio: row.audio, ok: row.ok, item: row.item }, null, 2),
+	);
 }
 
 if (rows.length > 1) {

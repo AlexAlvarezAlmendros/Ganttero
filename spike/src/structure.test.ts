@@ -20,7 +20,9 @@ function ollamaReply(content: string): Response {
 
 describe("structureTranscript", () => {
 	it("devuelve el ítem validado al primer intento", async () => {
-		const fetchFn = vi.fn().mockResolvedValue(ollamaReply(JSON.stringify(validItem)));
+		const fetchFn = vi
+			.fn()
+			.mockResolvedValue(ollamaReply(JSON.stringify(validItem)));
 
 		const result = await structureTranscript("hay que hacer la build", {
 			today: "2026-07-23",
@@ -33,9 +35,14 @@ describe("structureTranscript", () => {
 	});
 
 	it("inyecta el 'hoy' recibido en el prompt (nunca lo calcula)", async () => {
-		const fetchFn = vi.fn().mockResolvedValue(ollamaReply(JSON.stringify(validItem)));
+		const fetchFn = vi
+			.fn()
+			.mockResolvedValue(ollamaReply(JSON.stringify(validItem)));
 
-		await structureTranscript("para el viernes", { today: "2031-01-06", fetchFn });
+		await structureTranscript("para el viernes", {
+			today: "2031-01-06",
+			fetchFn,
+		});
 
 		const body = JSON.parse(fetchFn.mock.calls[0]?.[1]?.body as string);
 		expect(body.messages[0].content).toContain("Hoy es 2031-01-06");
@@ -61,7 +68,9 @@ describe("structureTranscript", () => {
 	});
 
 	it("lanza StructureError al agotar los intentos", async () => {
-		const fetchFn = vi.fn().mockImplementation(async () => ollamaReply("esto no es JSON"));
+		const fetchFn = vi
+			.fn()
+			.mockImplementation(async () => ollamaReply("esto no es JSON"));
 
 		await expect(
 			structureTranscript("hay que hacer la build", {
@@ -74,7 +83,9 @@ describe("structureTranscript", () => {
 	});
 
 	it("lanza si Ollama responde con error HTTP", async () => {
-		const fetchFn = vi.fn().mockResolvedValue(new Response("boom", { status: 500 }));
+		const fetchFn = vi
+			.fn()
+			.mockResolvedValue(new Response("boom", { status: 500 }));
 
 		await expect(
 			structureTranscript("hay que hacer la build", {

@@ -64,8 +64,12 @@ describe("capturedItemSchema", () => {
 	});
 
 	it("rechaza estimaciones no enteras o negativas", () => {
-		expect(parseCapturedItem({ ...valid, estimate_min: -30 }).success).toBe(false);
-		expect(parseCapturedItem({ ...valid, estimate_min: 45.5 }).success).toBe(false);
+		expect(parseCapturedItem({ ...valid, estimate_min: -30 }).success).toBe(
+			false,
+		);
+		expect(parseCapturedItem({ ...valid, estimate_min: 45.5 }).success).toBe(
+			false,
+		);
 	});
 
 	it("rechaza campos extra inventados por la IA", () => {

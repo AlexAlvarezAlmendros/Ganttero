@@ -16,16 +16,19 @@ const TRANSCRIPTS = [
 	"Hay que hacer una build de Windows y de Linux del plugin OPRW1 con los nuevos fixes.",
 ];
 
-describe.skipIf(!process.env["SPIKE_INTEGRATION"])(
+describe.skipIf(!process.env.SPIKE_INTEGRATION)(
 	"structureTranscript (integración real)",
 	() => {
 		it.each(TRANSCRIPTS.map((transcript, index) => [index + 1, transcript]))(
 			"estructura la transcripción %d sin inventar campos",
 			{ timeout: 300_000 },
 			async (_index, transcript) => {
-				const { item, attempts } = await structureTranscript(transcript as string, {
-					today: "2026-07-23",
-				});
+				const { item, attempts } = await structureTranscript(
+					transcript as string,
+					{
+						today: "2026-07-23",
+					},
+				);
 
 				expect(item.title.length).toBeGreaterThan(3);
 				expect(item.type).toBe("task");
