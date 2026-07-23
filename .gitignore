@@ -141,3 +141,19 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Python (hooks de .claude)
+__pycache__/
+*.pyc
+
+# Base de datos (libSQL / SQLite) — nunca commitear
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqld
+
+# Audios del spike de voz (datos personales, quedan en local/NAS)
+spike/audios/*
+!spike/audios/.gitkeep
+spike/out/
