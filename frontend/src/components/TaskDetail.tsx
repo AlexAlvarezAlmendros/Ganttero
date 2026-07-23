@@ -1,0 +1,142 @@
+import { useState } from "react";
+import { useTimelog } from "../api/timelogs.js";
+import type { Item, ItemStatus } from "../api/types.js";
+import { formatDuration } from "../lib/format.js";
+import { Button } from "./ds/Button.js";
+import { Dialog } from "./ds/Dialog.js";
+import { Input } from "./ds/Input.js";
+import { MicroLabel } from "./ds/MicroLabel.js";
+import { Select } from "./ds/Select.js";
+import { StatusBadge } from "./ds/StatusBadge.js";
+
+export function TaskDetail({
+	task,
+	onClose,
+	onStatus,
+	onSave,
+	onDelete,
+}: {
+	task: Item;
+	onClose: () => void;
+	onStatus: (item: Item, status: ItemStatus) => void;
+	onSave: (
+		item: Item,
+		patch: {
+			title?: string;
+			start_date?: string | null;
+			end_date?: string | null;
+			estimate_min?: number | null;
+		},
+	) => void;
+	onDelete: (item: Item) => void;
+}) {
+	const [title, setTitle] = useState(task.title);
+	const [start, setStart] = useState(task.start_date ?? "");
+	const [end, setEnd] = useState(task.end_date ?? "");
+	const [estimate, setEstimate] = useState(
+		task.estimate_min !== null ? String(task.estimate_min) : "",
+	);
+	const timelog = useTimelog(task.id);
+
+	return (
+		<Dialog
+			open
+			title={`${task.key} · detalle`}
+			onClose={onClose}
+			footer={
+				<>
+					<Button
+						variant="danger"
+						size="sm"
+						onClick={() => onDelete(task)}
+						style={{ marginRight: "auto" }}
+					>
+						ELIMINAR
+					</Button>
+					<Button variant="ghost" size="sm" onClick={onClose}>
+						CERRAR
+					</Button>
+					<Button
+						size="sm"
+						disabled={!title.trim()}
+						onClick={() =>
+							onSave(task, {
+								title: title.trim(),
+								start_date: start || null,
+								end_date: end || null,
+								estimate_min: estimate ? Number(estimate) : null,
+							})
+						}
+					>
+						GUARDAR
+					</Button>
+				</>
+			}
+		>
+			<div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+						gap: 10,
+					}}
+				>
+					<Input value={title} onChange={setTitle} style={{ flex: 1 }} />
+					<StatusBadge status={task.status} />
+				</div>
+				<div
+					style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+				>
+					<Select
+						label="Estado"
+						value={task.status}
+						onChange={(value) => onStatus(task, value as ItemStatus)}
+						options={[
+							{ value: "backlog", label: "BACKLOG" },
+							{ value: "in_progress", label: "EN CURSO" },
+							{ value: "blocked", label: "BLOQUEADA" },
+							{ value: "done", label: "HECHA" },
+						]}
+					/>
+					<Input
+						label="Estimación (min)"
+						type="number"
+						value={estimate}
+						onChange={setEstimate}
+					/>
+					<Input label="Inicio" type="date" value={start} onChange={setStart} />
+					<Input label="Fin" type="date" value={end} onChange={setEnd} />
+				</div>
+				<div>
+					<MicroLabel style={{ marginBottom: 8 }}>
+						TIEMPO REGISTRADO (AUTO)
+					</MicroLabel>
+					<div
+						style={{
+							fontFamily: "var(--font-mono)",
+							fontSize: 11,
+							color: timelog.data?.total_sec ? "var(--ink-2)" : "var(--ink-5)",
+						}}
+					>
+						{timelog.data && timelog.data.total_sec > 0
+							? `⏱ ${formatDuration(timelog.data.total_sec)}${timelog.data.running ? " · tramo abierto" : ""} · abre/cierra con el estado`
+							: "// aún sin tramos — pasa a EN CURSO para abrir uno"}
+					</div>
+				</div>
+				<div>
+					<MicroLabel style={{ marginBottom: 8 }}>GITHUB</MicroLabel>
+					<div
+						style={{
+							fontFamily: "var(--font-mono)",
+							fontSize: 11,
+							color: "var(--ink-5)",
+						}}
+					>
+						// cita {task.key} en un commit para enlazarlo — fase 6
+					</div>
+				</div>
+			</div>
+		</Dialog>
+	);
+}

@@ -8,6 +8,9 @@ import { ItemsService } from "./modules/items/items.service.js";
 import { ProjectsRepo } from "./modules/projects/projects.repo.js";
 import { projectsRoutes } from "./modules/projects/projects.routes.js";
 import { ProjectsService } from "./modules/projects/projects.service.js";
+import { TimelogRepo } from "./modules/timelog/timelog.repo.js";
+import { timelogRoutes } from "./modules/timelog/timelog.routes.js";
+import { TimelogService } from "./modules/timelog/timelog.service.js";
 
 export interface BuildAppOptions {
 	logger?: boolean;
@@ -48,9 +51,16 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 	if (db) {
 		const projectsRepo = new ProjectsRepo(db);
 		const projectsService = new ProjectsService(projectsRepo, now);
-		const itemsService = new ItemsService(new ItemsRepo(db), projectsRepo, now);
+		const timelogService = new TimelogService(new TimelogRepo(db), now);
+		const itemsService = new ItemsService(
+			new ItemsRepo(db),
+			projectsRepo,
+			now,
+			(item, previous) => timelogService.onStatusChange(item, previous),
+		);
 		app.register(projectsRoutes(projectsService));
 		app.register(itemsRoutes(itemsService));
+		app.register(timelogRoutes(timelogService, itemsService));
 	}
 
 	return app;

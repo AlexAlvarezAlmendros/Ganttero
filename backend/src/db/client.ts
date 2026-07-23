@@ -1,3 +1,5 @@
+import { mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
 import { type Client, createClient } from "@libsql/client";
 
 /**
@@ -9,6 +11,10 @@ import { type Client, createClient } from "@libsql/client";
  * (`PRAGMA foreign_keys`), y el modelo depende de sus ON DELETE CASCADE.
  */
 export async function createDbClient(url: string): Promise<Client> {
+	if (url.startsWith("file:")) {
+		// SQLite no crea directorios: sin esto, ./data/ inexistente = error 14.
+		await mkdir(dirname(url.slice("file:".length)), { recursive: true });
+	}
 	const db = createClient({ url });
 	await db.execute("PRAGMA foreign_keys = ON");
 	return db;

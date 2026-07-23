@@ -16,8 +16,8 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 |---|------|--------|------|------|
 | 0 | Spike de voz | ✅ Hecho | [00-spike-voz.md](plans/00-spike-voz.md) | Un audio se convierte en JSON de tarea válido (GO/NO-GO) → **GO** |
 | 1 | Fundaciones (datos + API + esqueleto) | ✅ Hecho | [01-fundaciones.md](plans/01-fundaciones.md) | CRUD de proyectos/tareas persistido en el NAS |
-| 2 | Kanban + cronometraje | 🔄 En curso | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
-| 3 | Gantt multi-escala | ⬜ Pendiente | [03-gantt.md](plans/03-gantt.md) | Una jerarquía épica/tarea/subtarea se ve coherente en las 5 escalas |
+| 2 | Kanban + cronometraje | ✅ Hecho | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
+| 3 | Gantt multi-escala | 🔄 En curso | [03-gantt.md](plans/03-gantt.md) | Una jerarquía épica/tarea/subtarea se ve coherente en las 5 escalas |
 | 4 | Automatización Gantt → Kanban | ⬜ Pendiente | [04-automatizacion.md](plans/04-automatizacion.md) | Al cambiar una fecha del Gantt, el Kanban se recalcula solo |
 | 5 | Captura por voz integrada | ⬜ Pendiente | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
 | 6 | Integración GitHub | ⬜ Pendiente | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
@@ -25,7 +25,7 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 
 ## Foco actual
 
-**Fase 2 — Kanban + cronometraje.** La Fase 1 está completa: CRUD de proyectos e ítems jerárquicos persistido en libSQL, esqueleto React con el design system y 47 tests en verde. Ahora: tablero Kanban con drag & drop y time_log automático en los cambios de estado.
+**Fase 3 — Gantt multi-escala.** Kanban con drag & drop y cronometraje automático funcionando (Fase 2 ✅). Ahora la pieza de UX más cara: el Gantt con zoom año→día, siguiendo el GanttView del design system.
 
 ## Grafo de dependencias
 
