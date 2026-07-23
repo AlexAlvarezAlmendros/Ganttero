@@ -15,8 +15,8 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | # | Fase | Estado | Plan | Hito |
 |---|------|--------|------|------|
 | 0 | Spike de voz | ✅ Hecho | [00-spike-voz.md](plans/00-spike-voz.md) | Un audio se convierte en JSON de tarea válido (GO/NO-GO) → **GO** |
-| 1 | Fundaciones (datos + API + esqueleto) | ⬜ Pendiente | [01-fundaciones.md](plans/01-fundaciones.md) | CRUD de proyectos/tareas persistido en el NAS |
-| 2 | Kanban + cronometraje | ⬜ Pendiente | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
+| 1 | Fundaciones (datos + API + esqueleto) | ✅ Hecho | [01-fundaciones.md](plans/01-fundaciones.md) | CRUD de proyectos/tareas persistido en el NAS |
+| 2 | Kanban + cronometraje | 🔄 En curso | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
 | 3 | Gantt multi-escala | ⬜ Pendiente | [03-gantt.md](plans/03-gantt.md) | Una jerarquía épica/tarea/subtarea se ve coherente en las 5 escalas |
 | 4 | Automatización Gantt → Kanban | ⬜ Pendiente | [04-automatizacion.md](plans/04-automatizacion.md) | Al cambiar una fecha del Gantt, el Kanban se recalcula solo |
 | 5 | Captura por voz integrada | ⬜ Pendiente | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
@@ -25,7 +25,7 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 
 ## Foco actual
 
-**Fase 1 — Fundaciones.** Monorepo pnpm, backend Fastify + libSQL con migraciones, módulos `projects` e `items`, esqueleto React. La Fase 0 cerró con **GO**: pipeline voz→JSON fiable al 100 % sobre el lote de prueba (portátil y homeserver).
+**Fase 2 — Kanban + cronometraje.** La Fase 1 está completa: CRUD de proyectos e ítems jerárquicos persistido en libSQL, esqueleto React con el design system y 47 tests en verde. Ahora: tablero Kanban con drag & drop y time_log automático en los cambios de estado.
 
 ## Grafo de dependencias
 

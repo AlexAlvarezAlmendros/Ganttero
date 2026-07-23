@@ -2,6 +2,9 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import type { Client } from "./db/client.js";
 import { ConflictError, DomainError, NotFoundError } from "./lib/errors.js";
+import { ItemsRepo } from "./modules/items/items.repo.js";
+import { itemsRoutes } from "./modules/items/items.routes.js";
+import { ItemsService } from "./modules/items/items.service.js";
 import { ProjectsRepo } from "./modules/projects/projects.repo.js";
 import { projectsRoutes } from "./modules/projects/projects.routes.js";
 import { ProjectsService } from "./modules/projects/projects.service.js";
@@ -43,8 +46,11 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 	app.get("/health", async () => ({ status: "ok" }));
 
 	if (db) {
-		const projectsService = new ProjectsService(new ProjectsRepo(db), now);
+		const projectsRepo = new ProjectsRepo(db);
+		const projectsService = new ProjectsService(projectsRepo, now);
+		const itemsService = new ItemsService(new ItemsRepo(db), projectsRepo, now);
 		app.register(projectsRoutes(projectsService));
+		app.register(itemsRoutes(itemsService));
 	}
 
 	return app;
