@@ -9,11 +9,11 @@ Es el **gate GO/NO-GO** del proyecto: ver [el plan de fase](../docs/planning/pla
 | Paso | Fichero | Estado |
 |------|---------|--------|
 | Contrato de salida (Zod) | `src/schema.ts` | ✅ |
-| Audios de prueba | `audios/` | ⬜ pendiente de grabar |
-| STT (Whisper.cpp / faster-whisper) | `src/stt.ts` | ⬜ |
-| Prompt + llamada a Gemma 4 | `src/structure.ts` | ⬜ |
-| CLI que encadena todo | `src/run.ts` | ⬜ |
-| Medición fiabilidad/latencia | `src/bench.ts` | ⬜ |
+| Audios de prueba | `audios/` | ✅ 5 clips AAC |
+| STT (faster-whisper, CPU) | `stt.py` + `src/stt.ts` | ✅ |
+| Prompt + llamada a Gemma 4 | `src/structure.ts` | ✅ (integración: `SPIKE_INTEGRATION=1 pnpm vitest run src/structure.integration.test.ts`) |
+| CLI que encadena todo | `src/run.ts` (`pnpm capture <audios…>`) | ✅ |
+| Medición fiabilidad/latencia | resumen integrado en `pnpm capture` con varios audios | ✅ |
 
 ## Cómo grabar los audios de prueba (tarea 0.1)
 
@@ -31,9 +31,20 @@ Es el **gate GO/NO-GO** del proyecto: ver [el plan de fase](../docs/planning/pla
 ```bash
 cd spike
 pnpm install
+python3 -m venv .venv && .venv/bin/pip install faster-whisper   # STT (una vez)
 pnpm typecheck
-pnpm test
+pnpm test                                # incluye smoke test real de STT
+
+# Transcribir un audio suelto
+.venv/bin/python stt.py audios/1.aac
+
+# Pipeline completo audio → JSON (uno o varios; con varios emite el resumen 0.6/0.7)
+pnpm capture audios/1.aac
+pnpm capture audios/*.aac --today 2026-07-23
 ```
+
+Requisitos del host: `ffmpeg` (normalización a WAV 16 kHz) y, para la fase 0.4,
+Ollama con `gemma4:e4b`.
 
 ## Criterio de aceptación de la fase
 

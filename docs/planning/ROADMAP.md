@@ -14,7 +14,7 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 
 | # | Fase | Estado | Plan | Hito |
 |---|------|--------|------|------|
-| 0 | Spike de voz | 🔄 En curso | [00-spike-voz.md](plans/00-spike-voz.md) | Un audio se convierte en JSON de tarea válido (GO/NO-GO) |
+| 0 | Spike de voz | ✅ Hecho | [00-spike-voz.md](plans/00-spike-voz.md) | Un audio se convierte en JSON de tarea válido (GO/NO-GO) → **GO** |
 | 1 | Fundaciones (datos + API + esqueleto) | ⬜ Pendiente | [01-fundaciones.md](plans/01-fundaciones.md) | CRUD de proyectos/tareas persistido en el NAS |
 | 2 | Kanban + cronometraje | ⬜ Pendiente | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
 | 3 | Gantt multi-escala | ⬜ Pendiente | [03-gantt.md](plans/03-gantt.md) | Una jerarquía épica/tarea/subtarea se ve coherente en las 5 escalas |
@@ -25,7 +25,7 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 
 ## Foco actual
 
-**Fase 0 — Spike de voz.** Prototipo aislado (sin UI de la app) que responde: ¿la voz→estructura es lo bastante buena y rápida? Es un **gate GO/NO-GO** del proyecto: si la captura por voz no es fiable, se replantea antes de construir el Gantt.
+**Fase 1 — Fundaciones.** Monorepo pnpm, backend Fastify + libSQL con migraciones, módulos `projects` e `items`, esqueleto React. La Fase 0 cerró con **GO**: pipeline voz→JSON fiable al 100 % sobre el lote de prueba (portátil y homeserver).
 
 ## Grafo de dependencias
 
@@ -57,3 +57,5 @@ Fase 1 (datos + API + esqueleto)
 - 2026-07-22 — **GitHub** como git (no self-hosted): la integración de repos es el único punto en la nube.
 - 2026-07-22 — **Automatización Gantt→Kanban** y **cronometraje automático** son pilares del producto, no extras.
 - 2026-07-22 — **Voz probablemente = STT (Whisper) + Gemma 4**, no solo Gemma (a confirmar en Fase 0).
+- 2026-07-23 — **GO de la Fase 0.** Pipeline confirmado: faster-whisper `small` (CPU) + Gemma 4 vía Ollama con structured output + Zod + reintento. Fiabilidad 5/5 (100 %) en portátil (e4b) y homeserver (E2B con prompt endurecido); fechas relativas y estimaciones validadas. Latencia: ~28 s/captura contra el homeserver, con ~20 s de overhead interno de Ollama a investigar (cómputo real ~4 s → objetivo ~8 s). El overhead no bloquea la Fase 1.
+- 2026-07-23 — La IA de producción apuntará al **Ollama del homeserver** (`gemma4:latest`, E2B en VRAM); el prompt vive en el código (`structure.ts`) con «hoy» siempre inyectado.

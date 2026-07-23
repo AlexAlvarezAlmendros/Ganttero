@@ -1,6 +1,6 @@
 # Plan 01 — Fundaciones (datos + API + esqueleto)
 
-> Fase: 1 de 7 | Estado: 🔒 Bloqueado (gate Fase 0) | Iniciado: —
+> Fase: 1 de 7 | Estado: ⬜ Pendiente | Iniciado: —
 > Hito del roadmap: CRUD de proyectos/tareas persistido en el NAS.
 
 Levanta el esqueleto real de la app: monorepo pnpm, backend Fastify con libSQL y migraciones, módulos `projects` e `items`, y el shell del frontend React.
@@ -61,3 +61,4 @@ Se puede crear un proyecto y una jerarquía épica→tarea→subtarea vía API, 
 | Fecha | Tarea | Notas |
 |-------|-------|-------|
 | 2026-07-23 | — | Plan creado. Bloqueado por el gate GO/NO-GO de la Fase 0. |
+| 2026-07-23 | — | **Gate abierto: GO de la Fase 0.** La 1.1 (scaffold) queda lista para empezar. |
