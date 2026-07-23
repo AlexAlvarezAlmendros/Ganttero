@@ -21,7 +21,7 @@ Levanta el esqueleto real de la app: monorepo pnpm, backend Fastify con libSQL y
 | # | Tarea | Estado | Notas |
 |---|-------|--------|-------|
 | 1.1 | Scaffold monorepo pnpm (frontend Vite+React19+TS, backend Fastify) + Biome + Vitest + tsconfig estricto | ✅ Hecho | Workspace `frontend`+`backend` (spike fuera a propósito) |
-| 1.2 | `backend/src/config/env.ts` — esquema Zod de todas las env vars | ⬜ Listo | 1.1 hecha |
+| 1.2 | `backend/src/config/env.ts` — esquema Zod de todas las env vars | ✅ Hecho | `loadEnv(source)` inyectable + `.env.example` |
 | 1.3 | Cliente libSQL/sqld + runner de migraciones versionadas (up/down), fichero en el NAS | ⬜ Listo | 1.1 hecha |
 | 1.4 | Migración inicial: `project`, `item` (parent_id + type), `time_log`, `github_link`, `settings`, `dependency` | 🔒 Bloqueado | Necesita 1.3 |
 
@@ -62,4 +62,5 @@ Se puede crear un proyecto y una jerarquía épica→tarea→subtarea vía API, 
 |-------|-------|-------|
 | 2026-07-23 | — | Plan creado. Bloqueado por el gate GO/NO-GO de la Fase 0. |
 | 2026-07-23 | — | **Gate abierto: GO de la Fase 0.** La 1.1 (scaffold) queda lista para empezar. |
+| 2026-07-23 | 1.2 | `config/env.ts`: esquema Zod con defaults (NODE_ENV, HOST, PORT, DATABASE_URL, OLLAMA_BASE_URL/MODEL, GITHUB_TOKEN opcional), `loadEnv(source)` inyectable para tests, errores sin volcar valores (no filtra secretos), `.env.example` documentado e `index.ts` cableado (fuera el puerto fijo). 6 tests. |
 | 2026-07-23 | 1.1 | Scaffold del monorepo: workspace pnpm (`frontend` + `backend`; el spike queda fuera con su propio lockfile), `tsconfig.base.json` estricto compartido, Biome en la raíz (`pnpm check`), Vitest en ambos paquetes. Backend: Fastify 5 con `buildApp()` + `GET /health` + test con `inject()`; puerto fijo hasta la 1.2. Frontend: Vite + React 19 con proxy `/api` → :3000. Verificado: Biome limpio, typecheck y tests en verde, `/health` responde en dev y `vite build` construye. |
