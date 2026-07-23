@@ -39,8 +39,8 @@ async function tableColumns(db: Client, table: string): Promise<string[]> {
 describe("migrateUp / migrateDown", () => {
 	let db: Client;
 
-	beforeEach(() => {
-		db = createDbClient(":memory:");
+	beforeEach(async () => {
+		db = await createDbClient(":memory:");
 	});
 
 	it("aplica las migraciones pendientes en orden y las registra", async () => {
