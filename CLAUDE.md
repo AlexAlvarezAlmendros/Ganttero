@@ -27,6 +27,24 @@ El **Gantt manda**: el *cuándo* vive en el Gantt; el Kanban es una vista deriva
 
 ---
 
+## Estrategia de ramas y pull requests — OBLIGATORIO
+
+`main` es la rama estable. **Nunca desarrollar features directamente en `main`.**
+
+1. **Una rama por feature/tarea del plan**, creada desde `main` actualizada:
+   - `feat/<tarea>-<slug>` para features (p. ej. `feat/1.2-env-zod`, `feat/2.1-tablero-kanban`)
+   - `fix/<slug>` para bugfixes · `chore/<slug>` para tooling · `docs/<slug>` para documentación
+2. La rama incluye **todo lo de esa tarea**: código, tests y la actualización de su plan en `docs/planning/`.
+3. Antes de abrir la PR, calidad en verde: `pnpm biome check .`, `pnpm -r typecheck`, `pnpm -r test`.
+4. Al terminar: push a `origin` y **pull request a `main`** con `gh pr create`.
+   - Título en imperativo; cuerpo con: qué se hace, tarea del plan que cierra y cómo se verificó.
+   - Sin atribución a la IA (regla global: commits y PRs limpios).
+5. **No mergear la PR**: el usuario revisa y mergea. Tras el merge, actualizar `main` local y borrar la rama.
+
+Excepción: ediciones menores de solo documentación/planificación (estado de tareas, registro de avance sueltos) pueden ir directas a `main`. Todo lo que toque código va por PR.
+
+---
+
 ## Estado del repositorio
 
 Repo **greenfield**. La Fase 0 (spike de voz) es un prototipo aislado; el esqueleto de la app
