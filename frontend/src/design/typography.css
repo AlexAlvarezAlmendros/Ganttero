@@ -1,0 +1,25 @@
+/* Espejo de tokens/typography.css del design system. */
+:root {
+	--font-mono: "Space Mono", monospace;
+	--font-display: "Syne", sans-serif;
+	/* escala */
+	--text-micro: 9.5px;
+	--text-tag: 10px;
+	--text-label: 11px;
+	--text-ui: 12px;
+	--text-body: 12.5px;
+	--text-body-lg: 14px;
+	--text-h3: 22px;
+	--text-h2: clamp(30px, 4.5vw, 64px);
+	--text-display: clamp(44px, 10vw, 150px);
+	/* tracking y leading */
+	--track-micro: 0.1em;
+	--track-label: 0.04em;
+	--track-display: -0.03em;
+	--track-h2: -0.02em;
+	--leading-display: 0.9;
+	--leading-body: 1.6;
+	--leading-prose: 1.72;
+	/* pesos: mono 400/700 · display 400–800 (Syne variable) */
+	--weight-display: 800;
+}

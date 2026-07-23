@@ -1,0 +1,36 @@
+/* Espejo de tokens/effects.css del design system. */
+:root {
+	/* geometría: SIN esquinas redondeadas. plano, sin sombras. */
+	--radius: 0px;
+	--rule: 1px solid var(--border-1);
+	--rule-strong: 1px solid var(--border-2);
+	--edge-accent: 2px solid var(--accent);
+	/* motion: rápido y seco. sin rebotes, sin blur. */
+	--speed: 0.15s;
+	--speed-slow: 0.6s;
+	--ease: ease;
+}
+@keyframes blink {
+	0%,
+	55% {
+		opacity: 1;
+	}
+	56%,
+	100% {
+		opacity: 0;
+	}
+}
+::selection {
+	background: var(--selection-bg);
+	color: var(--selection-ink);
+}
+::-webkit-scrollbar {
+	width: 9px;
+	height: 9px;
+}
+::-webkit-scrollbar-track {
+	background: #070706;
+}
+::-webkit-scrollbar-thumb {
+	background: #222;
+}

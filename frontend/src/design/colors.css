@@ -1,0 +1,40 @@
+/* Espejo de tokens/colors.css del design system (claude.ai/design ganttero). */
+:root {
+	/* base */
+	--bg-0: #070706;
+	--bg-1: #0d0d0b;
+	--bg-2: #12120f;
+	--border-1: #1d1d1a;
+	--border-2: #2a2a26;
+	--ink-1: #f2f0ea;
+	--ink-2: #cfcdc4;
+	--ink-3: #a8a69d;
+	--ink-4: #8a8a82;
+	--ink-5: #55554f;
+	--accent: #ccff00;
+	--accent-ink: #070706;
+	--accent-dim: rgba(204, 255, 0, 0.12);
+	/* signals — prioridades derivadas y estados */
+	--sig-late: #ff5c47;
+	--sig-now: #ccff00;
+	--sig-blocked: #ff9f2e;
+	--sig-normal: #a8a69d;
+	--sig-done: #55554f;
+	/* estados de ítem */
+	--status-backlog: #8a8a82;
+	--status-progress: #ccff00;
+	--status-blocked: #ff9f2e;
+	--status-done: #55554f;
+	/* alias semánticos */
+	--surface-page: var(--bg-0);
+	--surface-card: var(--bg-1);
+	--surface-raised: var(--bg-2);
+	--text-body: var(--ink-2);
+	--text-heading: var(--ink-1);
+	--text-muted: var(--ink-3);
+	--text-faint: var(--ink-5);
+	--border-card: var(--border-1);
+	--border-interactive: var(--border-2);
+	--selection-bg: var(--accent);
+	--selection-ink: var(--accent-ink);
+}
