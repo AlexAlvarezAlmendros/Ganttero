@@ -61,7 +61,17 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		return reply.status(500).send({ error: "error interno" });
 	});
 
-	app.get("/health", async () => ({ status: "ok" }));
+	app.get("/health", async (_request, reply) => {
+		if (!db) {
+			return { status: "ok", db: "none" };
+		}
+		try {
+			await db.execute("SELECT 1");
+			return { status: "ok", db: "ok" };
+		} catch {
+			return reply.status(503).send({ status: "degraded", db: "error" });
+		}
+	});
 
 	if (db) {
 		const projectsRepo = new ProjectsRepo(db);

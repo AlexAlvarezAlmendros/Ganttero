@@ -21,11 +21,11 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 4 | Automatización Gantt → Kanban | ✅ Hecho | [04-automatizacion.md](plans/04-automatizacion.md) | Al cambiar una fecha del Gantt, el Kanban se recalcula solo |
 | 5 | Captura por voz integrada | ✅ Hecho | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
 | 6 | Integración GitHub | ✅ Hecho | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
-| 7 | Pulido y despliegue estable | 🔄 En curso | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
+| 7 | Pulido y despliegue estable | ✅ Hecho | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
 
 ## Foco actual
 
-**Fase 7 — Pulido y despliegue.** Todas las funcionalidades están: Kanban derivado, Gantt multi-escala, voz y GitHub. Queda empaquetar: Docker + compose para el homeserver, datos y backups en el NAS, observabilidad.
+**Proyecto implementado (Fases 0–7 ✅).** Pendientes de operación (no de código): mergear la cadena de PRs, primer `docker compose up --build` en el homeserver ([docs/deploy.md](../deploy.md)), cron de backups, e investigar el overhead de ~20 s de Ollama por petición en el homeserver (la generación real son ~4 s).
 
 ## Grafo de dependencias
 
