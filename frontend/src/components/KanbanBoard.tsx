@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { Item, ItemStatus } from "../api/types.js";
+import type { KanbanBoardData, KanbanCard } from "../api/kanban.js";
+import type { ItemStatus } from "../api/types.js";
 import { formatDateRange, formatEstimate } from "../lib/format.js";
 import { MicroLabel } from "./ds/MicroLabel.js";
 import { StatusBadge } from "./ds/StatusBadge.js";
@@ -8,21 +9,20 @@ import { TaskCard } from "./ds/TaskCard.js";
 const COLUMNS: ItemStatus[] = ["backlog", "in_progress", "blocked", "done"];
 
 /**
- * Tablero por estados con drag & drop nativo. Las tarjetas son tareas y
- * subtareas (las épicas viven en el Gantt). La prioridad derivada llega
- * con el motor de la Fase 4; hasta entonces solo se señala `blocked`.
+ * Tablero 100 % DERIVADO del Gantt (Fase 4): las tarjetas, su orden y su
+ * prioridad llegan calculadas del backend. Aquí solo se pinta y se arrastra.
  */
 export function KanbanBoard({
-	items,
+	board,
 	onOpen,
 	onStatusChange,
 }: {
-	items: Item[];
-	onOpen: (item: Item) => void;
-	onStatusChange: (item: Item, status: ItemStatus) => void;
+	board: KanbanBoardData | undefined;
+	onOpen: (card: KanbanCard) => void;
+	onStatusChange: (card: KanbanCard, status: ItemStatus) => void;
 }) {
 	const [overColumn, setOverColumn] = useState<ItemStatus | null>(null);
-	const cards = items.filter((item) => item.type !== "epic");
+	const allCards = board ? Object.values(board.columns).flat() : [];
 
 	return (
 		<div
@@ -34,7 +34,7 @@ export function KanbanBoard({
 			}}
 		>
 			{COLUMNS.map((status) => {
-				const list = cards.filter((item) => item.status === status);
+				const list = board?.columns[status] ?? [];
 				return (
 					<div
 						key={status}
@@ -47,9 +47,9 @@ export function KanbanBoard({
 							event.preventDefault();
 							setOverColumn(null);
 							const id = Number(event.dataTransfer.getData("text/plain"));
-							const item = cards.find((candidate) => candidate.id === id);
-							if (item && item.status !== status) {
-								onStatusChange(item, status);
+							const card = allCards.find((candidate) => candidate.id === id);
+							if (card && card.status !== status) {
+								onStatusChange(card, status);
 							}
 						}}
 						style={{
@@ -88,23 +88,23 @@ export function KanbanBoard({
 								padding: 8,
 							}}
 						>
-							{list.map((item) => (
+							{list.map((card) => (
 								<TaskCard
-									key={item.id}
-									id={item.key}
-									title={item.title}
-									priority={item.status === "blocked" ? "blocked" : "normal"}
-									done={item.status === "done"}
-									dates={formatDateRange(item.start_date, item.end_date)}
+									key={card.id}
+									id={card.key}
+									title={card.title}
+									priority={card.priority === "done" ? "normal" : card.priority}
+									done={card.status === "done"}
+									dates={formatDateRange(card.start_date, card.end_date)}
 									estimate={
-										item.estimate_min !== null
-											? formatEstimate(item.estimate_min)
+										card.estimate_min !== null
+											? formatEstimate(card.estimate_min)
 											: undefined
 									}
-									onClick={() => onOpen(item)}
+									onClick={() => onOpen(card)}
 									draggable
 									onDragStart={(event) =>
-										event.dataTransfer.setData("text/plain", String(item.id))
+										event.dataTransfer.setData("text/plain", String(card.id))
 									}
 								/>
 							))}

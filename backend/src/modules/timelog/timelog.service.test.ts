@@ -104,6 +104,23 @@ describe("TimelogService.onStatusChange", () => {
 	});
 });
 
+describe("TimelogService.onStatusChange — épicas (regresión)", () => {
+	it("una épica en in_progress NO abre cronómetro (sería invisible)", async () => {
+		const open = vi.fn();
+		const service = new TimelogService(
+			mockRepo({ open }),
+			() => new Date("2026-07-23T10:00:00.000Z"),
+		);
+
+		await service.onStatusChange(
+			{ ...makeItem("in_progress"), type: "epic" },
+			"backlog",
+		);
+
+		expect(open).not.toHaveBeenCalled();
+	});
+});
+
 describe("TimelogService.summary", () => {
 	it("suma tramos cerrados y añade el tramo abierto hasta ahora", async () => {
 		const logs = [

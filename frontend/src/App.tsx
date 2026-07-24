@@ -13,12 +13,14 @@ import {
 	useItems,
 	useUpdateItem,
 } from "./api/items.js";
+import { useKanban } from "./api/kanban.js";
 import {
 	useCreateProject,
 	useDeleteProject,
 	useProjects,
 	useUpdateProject,
 } from "./api/projects.js";
+import { useSettings } from "./api/settings.js";
 import type { Item, ItemStatus, Project } from "./api/types.js";
 import { GanttView } from "./components/GanttView.js";
 import { ItemDialog } from "./components/ItemDialog.js";
@@ -31,7 +33,7 @@ import { Button } from "./components/ds/Button.js";
 import { IconButton } from "./components/ds/IconButton.js";
 import { Toast } from "./components/ds/Toast.js";
 import { TopBar } from "./components/ds/TopBar.js";
-import { addDays } from "./lib/gantt.js";
+import { addDays, localDayIso } from "./lib/gantt.js";
 import { AjustesPage } from "./pages/AjustesPage.js";
 
 const NAV = [
@@ -50,8 +52,22 @@ export function App() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const view = location.pathname.replace("/", "") || "kanban";
-	// "hoy" se resuelve una sola vez en el borde de la UI y se inyecta hacia dentro.
-	const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+	// "Hoy" LOCAL, en estado: una pestaña que vive días debe cruzar la
+	// medianoche sola (hallazgo de la verificación adversaria de la Fase 4).
+	const [today, setToday] = useState(() => localDayIso(new Date()));
+	useEffect(() => {
+		const tick = () =>
+			setToday((current) => {
+				const next = localDayIso(new Date());
+				return next === current ? current : next;
+			});
+		const timer = setInterval(tick, 60_000);
+		window.addEventListener("focus", tick);
+		return () => {
+			clearInterval(timer);
+			window.removeEventListener("focus", tick);
+		};
+	}, []);
 
 	const [toast, setToast] = useState<string | null>(null);
 	const [projectId, setProjectId] = useState<number | null>(null);
@@ -67,6 +83,8 @@ export function App() {
 		return list.find((project) => project.id === projectId) ?? list[0] ?? null;
 	}, [projects.data, projectId]);
 	const items = useItems(active?.id ?? null);
+	const kanban = useKanban(active?.id ?? null);
+	const settings = useSettings();
 
 	const createProject = useCreateProject();
 	const updateProject = useUpdateProject();
@@ -155,7 +173,7 @@ export function App() {
 							letterSpacing: ".06em",
 						}}
 					>
-						VENTANA: HOY + 14D
+						VENTANA: HOY + {settings.data?.kanban_window_days ?? 14}D
 					</span>
 				</div>
 				<Button
@@ -174,7 +192,7 @@ export function App() {
 						path="/kanban"
 						element={
 							<KanbanBoard
-								items={items.data ?? []}
+								board={kanban.data}
 								onOpen={setOpenTask}
 								onStatusChange={handleStatus}
 							/>
@@ -210,7 +228,7 @@ export function App() {
 							/>
 						}
 					/>
-					<Route path="/ajustes" element={<AjustesPage />} />
+					<Route path="/ajustes" element={<AjustesPage onSaved={setToast} />} />
 				</Routes>
 			</main>
 			<footer

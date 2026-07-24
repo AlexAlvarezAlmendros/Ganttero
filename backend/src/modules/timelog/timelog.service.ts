@@ -14,6 +14,11 @@ export class TimelogService {
 	) {}
 
 	async onStatusChange(item: Item, previous: ItemStatus): Promise<void> {
+		// Las épicas contienen, no se ejecutan: sin cronómetro (el Kanban
+		// nunca las muestra y un tramo suyo sería invisible para siempre).
+		if (item.type === "epic") {
+			return;
+		}
 		const entering = item.status === "in_progress";
 		const leaving = previous === "in_progress";
 

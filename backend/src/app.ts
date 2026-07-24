@@ -5,9 +5,13 @@ import { ConflictError, DomainError, NotFoundError } from "./lib/errors.js";
 import { ItemsRepo } from "./modules/items/items.repo.js";
 import { itemsRoutes } from "./modules/items/items.routes.js";
 import { ItemsService } from "./modules/items/items.service.js";
+import { kanbanRoutes } from "./modules/kanban/kanban.routes.js";
+import { KanbanService } from "./modules/kanban/kanban.service.js";
 import { ProjectsRepo } from "./modules/projects/projects.repo.js";
 import { projectsRoutes } from "./modules/projects/projects.routes.js";
 import { ProjectsService } from "./modules/projects/projects.service.js";
+import { SettingsRepo } from "./modules/settings/settings.repo.js";
+import { settingsRoutes } from "./modules/settings/settings.routes.js";
 import { TimelogRepo } from "./modules/timelog/timelog.repo.js";
 import { timelogRoutes } from "./modules/timelog/timelog.routes.js";
 import { TimelogService } from "./modules/timelog/timelog.service.js";
@@ -50,17 +54,27 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 
 	if (db) {
 		const projectsRepo = new ProjectsRepo(db);
+		const itemsRepo = new ItemsRepo(db);
+		const settingsRepo = new SettingsRepo(db);
 		const projectsService = new ProjectsService(projectsRepo, now);
 		const timelogService = new TimelogService(new TimelogRepo(db), now);
 		const itemsService = new ItemsService(
-			new ItemsRepo(db),
+			itemsRepo,
 			projectsRepo,
 			now,
 			(item, previous) => timelogService.onStatusChange(item, previous),
 		);
+		const kanbanService = new KanbanService(
+			itemsRepo,
+			projectsRepo,
+			settingsRepo,
+			now,
+		);
 		app.register(projectsRoutes(projectsService));
 		app.register(itemsRoutes(itemsService));
 		app.register(timelogRoutes(timelogService, itemsService));
+		app.register(kanbanRoutes(kanbanService));
+		app.register(settingsRoutes(settingsRepo));
 	}
 
 	return app;

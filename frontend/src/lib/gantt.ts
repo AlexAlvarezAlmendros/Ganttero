@@ -35,6 +35,16 @@ export function addDays(isoDay: string, days: number): string {
 	return fromUtc(toUtc(isoDay) + days * DAY_MS);
 }
 
+/**
+ * Día de calendario LOCAL del navegador (no UTC): a las 00:30 hora local
+ * "hoy" ya es hoy, aunque UTC siga en ayer. Único punto donde se deriva.
+ */
+export function localDayIso(date: Date): string {
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	return `${date.getFullYear()}-${month}-${day}`;
+}
+
 export function daysBetween(a: string, b: string): number {
 	return Math.round((toUtc(b) - toUtc(a)) / DAY_MS);
 }

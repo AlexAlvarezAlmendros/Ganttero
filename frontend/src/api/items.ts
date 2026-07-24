@@ -26,8 +26,10 @@ export function useCreateItem() {
 	return useMutation({
 		mutationFn: (data: CreateItemInput) =>
 			apiSend<Item>("POST", "/items", data),
-		onSuccess: (item) =>
-			queryClient.invalidateQueries({ queryKey: ["items", item.project_id] }),
+		onSuccess: (item) => {
+			queryClient.invalidateQueries({ queryKey: ["items", item.project_id] });
+			queryClient.invalidateQueries({ queryKey: ["kanban", item.project_id] });
+		},
 	});
 }
 
@@ -49,6 +51,7 @@ export function useUpdateItem() {
 			apiSend<Item>("PATCH", `/items/${id}`, patch),
 		onSuccess: (item) => {
 			queryClient.invalidateQueries({ queryKey: ["items", item.project_id] });
+			queryClient.invalidateQueries({ queryKey: ["kanban", item.project_id] });
 			queryClient.invalidateQueries({ queryKey: ["timelog", item.id] });
 		},
 	});
@@ -59,9 +62,13 @@ export function useDeleteItem() {
 	return useMutation({
 		mutationFn: ({ id }: { id: number; project_id: number }) =>
 			apiSend<void>("DELETE", `/items/${id}`),
-		onSuccess: (_data, variables) =>
+		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: ["items", variables.project_id],
-			}),
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["kanban", variables.project_id],
+			});
+		},
 	});
 }
