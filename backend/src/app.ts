@@ -2,19 +2,40 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import type { Client } from "./db/client.js";
 import { ConflictError, DomainError, NotFoundError } from "./lib/errors.js";
+import type { GitHubClient } from "./modules/github/github.client.js";
+import { GithubRepo } from "./modules/github/github.repo.js";
+import { githubRoutes } from "./modules/github/github.routes.js";
+import type { GithubStatus } from "./modules/github/github.schema.js";
+import { GithubService } from "./modules/github/github.service.js";
+import { ItemsRepo } from "./modules/items/items.repo.js";
+import { itemsRoutes } from "./modules/items/items.routes.js";
+import { ItemsService } from "./modules/items/items.service.js";
+import { kanbanRoutes } from "./modules/kanban/kanban.routes.js";
+import { KanbanService } from "./modules/kanban/kanban.service.js";
 import { ProjectsRepo } from "./modules/projects/projects.repo.js";
 import { projectsRoutes } from "./modules/projects/projects.routes.js";
 import { ProjectsService } from "./modules/projects/projects.service.js";
+import { SettingsRepo } from "./modules/settings/settings.repo.js";
+import { settingsRoutes } from "./modules/settings/settings.routes.js";
+import { TimelogRepo } from "./modules/timelog/timelog.repo.js";
+import { timelogRoutes } from "./modules/timelog/timelog.routes.js";
+import { TimelogService } from "./modules/timelog/timelog.service.js";
+import { voiceRoutes } from "./modules/voice/voice.routes.js";
+import type { VoiceService } from "./modules/voice/voice.service.js";
 
 export interface BuildAppOptions {
 	logger?: boolean;
 	db?: Client;
 	/** Reloj inyectable: los tests fijan "hoy"; producción usa el real. */
 	now?: () => Date;
+	/** Pipeline de voz (Fase 5): inyectado desde index.ts; los tests lo mockean. */
+	voice?: { service: VoiceService; audioDir: string };
+	/** GitHub (Fase 6): cliente inyectado; los tests lo mockean. */
+	github?: { client: GitHubClient; status: GithubStatus };
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-	const { logger = false, db, now } = options;
+	const { logger = false, db, now, voice, github } = options;
 	const app = Fastify({ logger });
 
 	app.setErrorHandler((error, _request, reply) => {
@@ -40,11 +61,56 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		return reply.status(500).send({ error: "error interno" });
 	});
 
-	app.get("/health", async () => ({ status: "ok" }));
+	app.get("/health", async (_request, reply) => {
+		if (!db) {
+			return { status: "ok", db: "none" };
+		}
+		try {
+			await db.execute("SELECT 1");
+			return { status: "ok", db: "ok" };
+		} catch {
+			return reply.status(503).send({ status: "degraded", db: "error" });
+		}
+	});
 
 	if (db) {
-		const projectsService = new ProjectsService(new ProjectsRepo(db), now);
+		const projectsRepo = new ProjectsRepo(db);
+		const itemsRepo = new ItemsRepo(db);
+		const settingsRepo = new SettingsRepo(db);
+		const projectsService = new ProjectsService(projectsRepo, now);
+		const timelogService = new TimelogService(new TimelogRepo(db), now);
+		const itemsService = new ItemsService(
+			itemsRepo,
+			projectsRepo,
+			now,
+			(item, previous) => timelogService.onStatusChange(item, previous),
+		);
+		const kanbanService = new KanbanService(
+			itemsRepo,
+			projectsRepo,
+			settingsRepo,
+			now,
+		);
 		app.register(projectsRoutes(projectsService));
+		app.register(itemsRoutes(itemsService));
+		app.register(timelogRoutes(timelogService, itemsService));
+		app.register(kanbanRoutes(kanbanService));
+		app.register(settingsRoutes(settingsRepo));
+		if (voice) {
+			app.register(voiceRoutes(voice.service, settingsRepo, voice.audioDir));
+		}
+		if (github) {
+			const githubService = new GithubService(
+				new GithubRepo(db),
+				projectsRepo,
+				github.client,
+				itemsService,
+				now,
+				(message) => app.log.info(message),
+			);
+			app.decorate("githubService", githubService);
+			app.register(githubRoutes(githubService, github.status));
+		}
 	}
 
 	return app;

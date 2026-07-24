@@ -158,3 +158,6 @@ __pycache__/
 spike/audios/*
 !spike/audios/.gitkeep
 spike/out/
+
+# Datos del backend en dev (DB local y audios retenidos — NUNCA al repo)
+backend/data/

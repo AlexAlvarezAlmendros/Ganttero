@@ -15,17 +15,17 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | # | Fase | Estado | Plan | Hito |
 |---|------|--------|------|------|
 | 0 | Spike de voz | ✅ Hecho | [00-spike-voz.md](plans/00-spike-voz.md) | Un audio se convierte en JSON de tarea válido (GO/NO-GO) → **GO** |
-| 1 | Fundaciones (datos + API + esqueleto) | ⬜ Pendiente | [01-fundaciones.md](plans/01-fundaciones.md) | CRUD de proyectos/tareas persistido en el NAS |
-| 2 | Kanban + cronometraje | ⬜ Pendiente | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
-| 3 | Gantt multi-escala | ⬜ Pendiente | [03-gantt.md](plans/03-gantt.md) | Una jerarquía épica/tarea/subtarea se ve coherente en las 5 escalas |
-| 4 | Automatización Gantt → Kanban | ⬜ Pendiente | [04-automatizacion.md](plans/04-automatizacion.md) | Al cambiar una fecha del Gantt, el Kanban se recalcula solo |
-| 5 | Captura por voz integrada | ⬜ Pendiente | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
-| 6 | Integración GitHub | ⬜ Pendiente | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
-| 7 | Pulido y despliegue estable | ⬜ Pendiente | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
+| 1 | Fundaciones (datos + API + esqueleto) | ✅ Hecho | [01-fundaciones.md](plans/01-fundaciones.md) | CRUD de proyectos/tareas persistido en el NAS |
+| 2 | Kanban + cronometraje | ✅ Hecho | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
+| 3 | Gantt multi-escala | ✅ Hecho | [03-gantt.md](plans/03-gantt.md) | Una jerarquía épica/tarea/subtarea se ve coherente en las 5 escalas |
+| 4 | Automatización Gantt → Kanban | ✅ Hecho | [04-automatizacion.md](plans/04-automatizacion.md) | Al cambiar una fecha del Gantt, el Kanban se recalcula solo |
+| 5 | Captura por voz integrada | ✅ Hecho | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
+| 6 | Integración GitHub | ✅ Hecho | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
+| 7 | Pulido y despliegue estable | ✅ Hecho | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
 
 ## Foco actual
 
-**Fase 1 — Fundaciones.** Monorepo pnpm, backend Fastify + libSQL con migraciones, módulos `projects` e `items`, esqueleto React. La Fase 0 cerró con **GO**: pipeline voz→JSON fiable al 100 % sobre el lote de prueba (portátil y homeserver).
+**Proyecto implementado (Fases 0–7 ✅).** Pendientes de operación (no de código): mergear la cadena de PRs, primer `docker compose up --build` en el homeserver ([docs/deploy.md](../deploy.md)), cron de backups, e investigar el overhead de ~20 s de Ollama por petición en el homeserver (la generación real son ~4 s).
 
 ## Grafo de dependencias
 
@@ -58,4 +58,6 @@ Fase 1 (datos + API + esqueleto)
 - 2026-07-22 — **Automatización Gantt→Kanban** y **cronometraje automático** son pilares del producto, no extras.
 - 2026-07-22 — **Voz probablemente = STT (Whisper) + Gemma 4**, no solo Gemma (a confirmar en Fase 0).
 - 2026-07-23 — **GO de la Fase 0.** Pipeline confirmado: faster-whisper `small` (CPU) + Gemma 4 vía Ollama con structured output + Zod + reintento. Fiabilidad 5/5 (100 %) en portátil (e4b) y homeserver (E2B con prompt endurecido); fechas relativas y estimaciones validadas. Latencia: ~28 s/captura contra el homeserver, con ~20 s de overhead interno de Ollama a investigar (cómputo real ~4 s → objetivo ~8 s). El overhead no bloquea la Fase 1.
+- 2026-07-24 — **Smart commits por POLLING, no webhook** (cierra la decisión abierta de architecture.md §8): nada de la LAN se expone a Internet; la latencia del intervalo (5 min por defecto) es irrelevante para un solo usuario. `GITHUB_POLL_SECONDS=0` lo apaga.
+- 2026-07-23 — **Gantt a medida** (cierra la decisión abierta de architecture.md §8): ninguna librería reproduce la estética del design system y el GanttView del kit ya define el enfoque (filas + barras posicionadas en %). Redibujar 5 escalas con agrupación es más simple sin pelearse con una librería.
 - 2026-07-23 — La IA de producción apuntará al **Ollama del homeserver** (`gemma4:latest`, E2B en VRAM); el prompt vive en el código (`structure.ts`) con «hoy» siempre inyectado.
