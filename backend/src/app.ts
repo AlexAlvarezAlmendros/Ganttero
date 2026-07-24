@@ -1,13 +1,51 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import { ZodError } from "zod";
+import type { Client } from "./db/client.js";
+import { ConflictError, DomainError, NotFoundError } from "./lib/errors.js";
+import { ProjectsRepo } from "./modules/projects/projects.repo.js";
+import { projectsRoutes } from "./modules/projects/projects.routes.js";
+import { ProjectsService } from "./modules/projects/projects.service.js";
 
 export interface BuildAppOptions {
 	logger?: boolean;
+	db?: Client;
+	/** Reloj inyectable: los tests fijan "hoy"; producción usa el real. */
+	now?: () => Date;
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-	const app = Fastify({ logger: options.logger ?? false });
+	const { logger = false, db, now } = options;
+	const app = Fastify({ logger });
+
+	app.setErrorHandler((error, _request, reply) => {
+		if (error instanceof ZodError) {
+			return reply.status(400).send({
+				error: "validación",
+				issues: error.issues.map((issue) => ({
+					path: issue.path.join("."),
+					message: issue.message,
+				})),
+			});
+		}
+		if (error instanceof NotFoundError) {
+			return reply.status(404).send({ error: error.message });
+		}
+		if (error instanceof ConflictError) {
+			return reply.status(409).send({ error: error.message });
+		}
+		if (error instanceof DomainError) {
+			return reply.status(422).send({ error: error.message });
+		}
+		app.log.error(error);
+		return reply.status(500).send({ error: "error interno" });
+	});
 
 	app.get("/health", async () => ({ status: "ok" }));
+
+	if (db) {
+		const projectsService = new ProjectsService(new ProjectsRepo(db), now);
+		app.register(projectsRoutes(projectsService));
+	}
 
 	return app;
 }

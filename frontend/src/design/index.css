@@ -1,0 +1,20 @@
+/* Design system Ganttero — tokens espejados del proyecto de claude.ai/design.
+   Fuente de verdad: https://claude.ai/design/p/0eea579b-6bec-4a73-ba12-fd6757545ad6 */
+@import "./fonts.css";
+@import "./colors.css";
+@import "./typography.css";
+@import "./spacing.css";
+@import "./effects.css";
+
+body {
+	margin: 0;
+	background: var(--bg-0);
+	color: var(--ink-1);
+	font-family: var(--font-mono);
+}
+a {
+	color: var(--accent);
+}
+a:hover {
+	color: var(--ink-1);
+}
