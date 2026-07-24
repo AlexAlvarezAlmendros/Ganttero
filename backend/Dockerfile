@@ -8,7 +8,7 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY backend/package.json backend/
 RUN pnpm install --frozen-lockfile --filter backend
 COPY backend backend
-RUN pnpm --filter backend build && pnpm --filter backend deploy --prod --legacy /out
+RUN pnpm --filter backend build && pnpm --filter backend deploy --prod /out
 
 FROM node:22-bookworm-slim
 # python3 + ffmpeg para el STT (faster-whisper); imagen gorda a cambio de
