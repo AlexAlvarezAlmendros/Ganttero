@@ -15,16 +15,20 @@ import { settingsRoutes } from "./modules/settings/settings.routes.js";
 import { TimelogRepo } from "./modules/timelog/timelog.repo.js";
 import { timelogRoutes } from "./modules/timelog/timelog.routes.js";
 import { TimelogService } from "./modules/timelog/timelog.service.js";
+import { voiceRoutes } from "./modules/voice/voice.routes.js";
+import type { VoiceService } from "./modules/voice/voice.service.js";
 
 export interface BuildAppOptions {
 	logger?: boolean;
 	db?: Client;
 	/** Reloj inyectable: los tests fijan "hoy"; producción usa el real. */
 	now?: () => Date;
+	/** Pipeline de voz (Fase 5): inyectado desde index.ts; los tests lo mockean. */
+	voice?: { service: VoiceService; audioDir: string };
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-	const { logger = false, db, now } = options;
+	const { logger = false, db, now, voice } = options;
 	const app = Fastify({ logger });
 
 	app.setErrorHandler((error, _request, reply) => {
@@ -75,6 +79,9 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		app.register(timelogRoutes(timelogService, itemsService));
 		app.register(kanbanRoutes(kanbanService));
 		app.register(settingsRoutes(settingsRepo));
+		if (voice) {
+			app.register(voiceRoutes(voice.service, settingsRepo, voice.audioDir));
+		}
 	}
 
 	return app;

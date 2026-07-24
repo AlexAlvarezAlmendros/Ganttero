@@ -10,23 +10,40 @@ import { Select } from "./ds/Select.js";
  * Alta manual de ítems (la captura por voz de la Fase 5 pre-rellenará
  * este mismo formulario). El padre se filtra según la jerarquía.
  */
+export interface ItemDialogInitial {
+	title?: string;
+	type?: ItemType;
+	start_date?: string | null;
+	end_date?: string | null;
+	estimate_min?: number | null;
+	description?: string | null;
+}
+
 export function ItemDialog({
 	projectId,
 	items,
+	initial,
+	hint,
 	onClose,
 	onSave,
 }: {
 	projectId: number;
 	items: Item[];
+	/** Pre-relleno (captura por voz de la Fase 5). */
+	initial?: ItemDialogInitial;
+	/** Transcripción u otro contexto que ver mientras se revisa. */
+	hint?: string;
 	onClose: () => void;
 	onSave: (data: CreateItemInput) => void;
 }) {
-	const [type, setType] = useState<ItemType>("task");
-	const [title, setTitle] = useState("");
+	const [type, setType] = useState<ItemType>(initial?.type ?? "task");
+	const [title, setTitle] = useState(initial?.title ?? "");
 	const [parent, setParent] = useState("");
-	const [start, setStart] = useState("");
-	const [end, setEnd] = useState("");
-	const [estimate, setEstimate] = useState("");
+	const [start, setStart] = useState(initial?.start_date ?? "");
+	const [end, setEnd] = useState(initial?.end_date ?? "");
+	const [estimate, setEstimate] = useState(
+		initial?.estimate_min != null ? String(initial.estimate_min) : "",
+	);
 
 	const parents =
 		type === "task"
@@ -54,6 +71,7 @@ export function ItemDialog({
 								type,
 								title: title.trim(),
 								parent_id: parent ? Number(parent) : null,
+								description: initial?.description ?? null,
 								start_date: start || null,
 								end_date: end || null,
 								estimate_min: estimate ? Number(estimate) : null,
@@ -66,6 +84,19 @@ export function ItemDialog({
 			}
 		>
 			<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+				{hint && (
+					<span
+						style={{
+							fontFamily: "var(--font-mono)",
+							fontSize: 10,
+							color: "var(--ink-4)",
+							borderLeft: "2px solid var(--accent)",
+							paddingLeft: 8,
+						}}
+					>
+						«{hint}»
+					</span>
+				)}
 				<Input
 					label="Título"
 					value={title}

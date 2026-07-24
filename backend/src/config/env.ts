@@ -20,6 +20,12 @@ const envSchema = z.object({
 		.regex(/^https?:\/\/.+/, "debe ser una URL http(s)")
 		.default("http://localhost:11434"),
 	OLLAMA_MODEL: z.string().min(1).default("gemma4:latest"),
+	/** STT local (Fase 5): intérprete Python del venv y script faster-whisper. */
+	STT_PYTHON: z.string().min(1).default("./stt/.venv/bin/python"),
+	STT_SCRIPT: z.string().min(1).default("./stt/stt.py"),
+	STT_MODEL: z.string().min(1).default("small"),
+	/** Carpeta de audios retenidos (en prod, montada desde el NAS). */
+	AUDIO_DIR: z.string().min(1).default("./data/audios"),
 	/** Token de GitHub con scope mínimo (Fase 6). Nunca loggearlo. */
 	GITHUB_TOKEN: z.string().min(1).optional(),
 });

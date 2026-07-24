@@ -24,11 +24,13 @@ import { useSettings } from "./api/settings.js";
 import type { Item, ItemStatus, Project } from "./api/types.js";
 import { GanttView } from "./components/GanttView.js";
 import { ItemDialog } from "./components/ItemDialog.js";
+import type { ItemDialogInitial } from "./components/ItemDialog.js";
 import { KanbanBoard } from "./components/KanbanBoard.js";
 import { ProjectDelete } from "./components/ProjectDelete.js";
 import { ProjectDialog } from "./components/ProjectDialog.js";
 import { ProjectSelector } from "./components/ProjectSelector.js";
 import { TaskDetail } from "./components/TaskDetail.js";
+import { VoiceCapture } from "./components/VoiceCapture.js";
 import { Button } from "./components/ds/Button.js";
 import { IconButton } from "./components/ds/IconButton.js";
 import { Toast } from "./components/ds/Toast.js";
@@ -75,6 +77,11 @@ export function App() {
 	const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 	const [openTask, setOpenTask] = useState<Item | null>(null);
 	const [creatingItem, setCreatingItem] = useState(false);
+	const [capturingVoice, setCapturingVoice] = useState(false);
+	const [voicePrefill, setVoicePrefill] = useState<{
+		initial: ItemDialogInitial;
+		hint: string;
+	} | null>(null);
 
 	const health = useHealth();
 	const projects = useProjects();
@@ -99,10 +106,10 @@ export function App() {
 		return () => clearTimeout(timer);
 	}, [toast]);
 
-	const voicePending = () =>
-		setToast(
-			"captura por voz — llega en la fase 5 (el pipeline ya está validado)",
-		);
+	const openVoice = () => {
+		if (!active) return;
+		setCapturingVoice(true);
+	};
 
 	const handleStatus = (item: Item, status: ItemStatus) => {
 		updateItem.mutate(
@@ -133,7 +140,7 @@ export function App() {
 				active={view}
 				onNav={(id) => navigate(`/${id}`)}
 				right={
-					<IconButton label="Capturar por voz" onClick={voicePending}>
+					<IconButton label="Capturar por voz" onClick={openVoice}>
 						●
 					</IconButton>
 				}
@@ -180,9 +187,9 @@ export function App() {
 					variant="ghost"
 					size="sm"
 					disabled={!active}
-					onClick={() => setCreatingItem(true)}
+					onClick={openVoice}
 				>
-					+ NUEVA TAREA
+					+ NUEVA TAREA (VOZ)
 				</Button>
 			</div>
 			<main style={{ padding: "10px 24px 30px", flex: 1 }}>
@@ -287,16 +294,53 @@ export function App() {
 					}
 				/>
 			)}
+			{capturingVoice && (
+				<VoiceCapture
+					onClose={() => setCapturingVoice(false)}
+					onCaptured={(captured) => {
+						setCapturingVoice(false);
+						setVoicePrefill({
+							initial: {
+								title: captured.item.title,
+								type: captured.item.type,
+								start_date: captured.item.start_date,
+								end_date: captured.item.end_date,
+								estimate_min: captured.item.estimate_min,
+								description: captured.item.description,
+							},
+							hint: captured.transcript,
+						});
+						setCreatingItem(true);
+					}}
+					onFallback={(reason) => {
+						setCapturingVoice(false);
+						setVoicePrefill(null);
+						setCreatingItem(true);
+						if (reason) setToast(reason);
+					}}
+				/>
+			)}
 			{creatingItem && active && (
 				<ItemDialog
 					projectId={active.id}
 					items={items.data ?? []}
-					onClose={() => setCreatingItem(false)}
+					{...(voicePrefill
+						? { initial: voicePrefill.initial, hint: voicePrefill.hint }
+						: {})}
+					onClose={() => {
+						setCreatingItem(false);
+						setVoicePrefill(null);
+					}}
 					onSave={(data) =>
 						createItem.mutate(data, {
 							onSuccess: (item) => {
-								setToast(`${item.key} creada`);
+								setToast(
+									voicePrefill
+										? `${item.key} creada por voz · entra donde sus fechas manden`
+										: `${item.key} creada`,
+								);
 								setCreatingItem(false);
+								setVoicePrefill(null);
 							},
 							onError: (error) => setToast(`error: ${error.message}`),
 						})

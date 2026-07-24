@@ -3,6 +3,7 @@ import { apiGet, apiSend } from "./client.js";
 
 export interface Settings {
 	kanban_window_days: number;
+	retain_audio: boolean;
 }
 
 export function useSettings() {
@@ -15,7 +16,7 @@ export function useSettings() {
 export function useUpdateSettings() {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (data: Settings) =>
+		mutationFn: (data: Partial<Settings>) =>
 			apiSend<Settings>("PATCH", "/settings", data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["settings"] });

@@ -19,13 +19,13 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 2 | Kanban + cronometraje | ✅ Hecho | [02-kanban-cronometraje.md](plans/02-kanban-cronometraje.md) | Mover a "Hecha" registra el tiempo en curso sin acción manual |
 | 3 | Gantt multi-escala | ✅ Hecho | [03-gantt.md](plans/03-gantt.md) | Una jerarquía épica/tarea/subtarea se ve coherente en las 5 escalas |
 | 4 | Automatización Gantt → Kanban | ✅ Hecho | [04-automatizacion.md](plans/04-automatizacion.md) | Al cambiar una fecha del Gantt, el Kanban se recalcula solo |
-| 5 | Captura por voz integrada | 🔄 En curso | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
-| 6 | Integración GitHub | ⬜ Pendiente | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
+| 5 | Captura por voz integrada | ✅ Hecho | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
+| 6 | Integración GitHub | 🔄 En curso | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
 | 7 | Pulido y despliegue estable | ⬜ Pendiente | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
 
 ## Foco actual
 
-**Fase 5 — Captura por voz integrada.** El pilar (Gantt→Kanban) está en marcha: tablero 100 % derivado con prioridades del servidor. Ahora se integra el pipeline validado en la Fase 0: módulo voice en el backend + grabador MediaRecorder + formulario pre-relleno con fallback manual.
+**Fase 6 — Integración GitHub.** La voz está integrada (crear una tarea hablando funciona end-to-end). Ahora el único punto en la nube: enlazar repos, leer actividad y smart commits GP-<n> por polling.
 
 ## Grafo de dependencias
 

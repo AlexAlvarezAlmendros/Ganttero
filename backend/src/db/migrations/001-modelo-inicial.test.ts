@@ -106,12 +106,13 @@ describe("migración 001-modelo-inicial", () => {
 		).rejects.toThrow(/CHECK/);
 	});
 
-	it("down revierte el modelo completo y permite reaplicar", async () => {
-		await migrateDown(db, migrations);
+	it("down revierte todas las migraciones y permite reaplicar", async () => {
+		await migrateDown(db, migrations, migrations.length);
 
 		expect(await tableNames(db)).toEqual(["schema_migrations"]);
 
 		const reapplied = await migrateUp(db, migrations, { now: fixedNow });
-		expect(reapplied).toEqual(["modelo-inicial"]);
+		expect(reapplied[0]).toBe("modelo-inicial");
+		expect(reapplied).toHaveLength(migrations.length);
 	});
 });

@@ -1,6 +1,7 @@
 import { useSettings, useUpdateSettings } from "../api/settings.js";
 import { MicroLabel } from "../components/ds/MicroLabel.js";
 import { Select } from "../components/ds/Select.js";
+import { Switch } from "../components/ds/Switch.js";
 
 export function AjustesPage({
 	onSaved,
