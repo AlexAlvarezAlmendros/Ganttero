@@ -57,6 +57,20 @@ export function useUpdateItem() {
 	});
 }
 
+/**
+ * "Mejorar formato": manda la descripción a la IA local (Ollama/Gemma) y
+ * devuelve markdown reestructurado y enriquecido. Sin estado: no toca la DB,
+ * sirve tanto al alta como a la edición antes de guardar.
+ */
+export function useImproveDescription() {
+	return useMutation({
+		mutationFn: (text: string) =>
+			apiSend<{ improved: string }>("POST", "/items/improve-description", {
+				text,
+			}),
+	});
+}
+
 export function useDeleteItem() {
 	const queryClient = useQueryClient();
 	return useMutation({

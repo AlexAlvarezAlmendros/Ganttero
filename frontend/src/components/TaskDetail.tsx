@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useItemCommits } from "../api/github.js";
+import { useImproveDescription } from "../api/items.js";
 import { useTimelog } from "../api/timelogs.js";
 import type { Item, ItemStatus } from "../api/types.js";
 import { formatDuration } from "../lib/format.js";
 import { Button } from "./ds/Button.js";
 import { Dialog } from "./ds/Dialog.js";
 import { Input } from "./ds/Input.js";
+import { MarkdownEditor } from "./ds/MarkdownEditor.js";
 import { MicroLabel } from "./ds/MicroLabel.js";
 import { Select } from "./ds/Select.js";
 import { StatusBadge } from "./ds/StatusBadge.js";
@@ -24,6 +26,7 @@ export function TaskDetail({
 		item: Item,
 		patch: {
 			title?: string;
+			description?: string | null;
 			start_date?: string | null;
 			end_date?: string | null;
 			estimate_min?: number | null;
@@ -32,6 +35,7 @@ export function TaskDetail({
 	onDelete: (item: Item) => void;
 }) {
 	const [title, setTitle] = useState(task.title);
+	const [description, setDescription] = useState(task.description ?? "");
 	const [start, setStart] = useState(task.start_date ?? "");
 	const [end, setEnd] = useState(task.end_date ?? "");
 	const [estimate, setEstimate] = useState(
@@ -39,6 +43,7 @@ export function TaskDetail({
 	);
 	const timelog = useTimelog(task.id);
 	const commits = useItemCommits(task.id);
+	const improve = useImproveDescription();
 
 	return (
 		<Dialog
@@ -64,6 +69,7 @@ export function TaskDetail({
 						onClick={() =>
 							onSave(task, {
 								title: title.trim(),
+								description: description.trim() || null,
 								start_date: start || null,
 								end_date: end || null,
 								estimate_min: estimate ? Number(estimate) : null,
@@ -87,6 +93,16 @@ export function TaskDetail({
 					<Input value={title} onChange={setTitle} style={{ flex: 1 }} />
 					<StatusBadge status={task.status} />
 				</div>
+				<MarkdownEditor
+					label="Descripción"
+					value={description}
+					onChange={setDescription}
+					placeholder="detalles, pasos, notas… (markdown)"
+					improve={{
+						run: async (current) =>
+							(await improve.mutateAsync(current)).improved,
+					}}
+				/>
 				<div
 					style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
 				>

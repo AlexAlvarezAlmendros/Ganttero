@@ -7,6 +7,7 @@ import { GithubRepo } from "./modules/github/github.repo.js";
 import { githubRoutes } from "./modules/github/github.routes.js";
 import type { GithubStatus } from "./modules/github/github.schema.js";
 import { GithubService } from "./modules/github/github.service.js";
+import type { Describer } from "./modules/items/items.describer.js";
 import { ItemsRepo } from "./modules/items/items.repo.js";
 import { itemsRoutes } from "./modules/items/items.routes.js";
 import { ItemsService } from "./modules/items/items.service.js";
@@ -32,10 +33,12 @@ export interface BuildAppOptions {
 	voice?: { service: VoiceService; audioDir: string };
 	/** GitHub (Fase 6): cliente inyectado; los tests lo mockean. */
 	github?: { client: GitHubClient; status: GithubStatus };
+	/** IA de descripciones (Fase 8): "mejorar formato"; los tests la mockean. */
+	describer?: Describer;
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-	const { logger = false, db, now, voice, github } = options;
+	const { logger = false, db, now, voice, github, describer } = options;
 	const app = Fastify({ logger });
 
 	app.setErrorHandler((error, _request, reply) => {
@@ -84,6 +87,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 			projectsRepo,
 			now,
 			(item, previous) => timelogService.onStatusChange(item, previous),
+			describer,
 		);
 		const kanbanService = new KanbanService(
 			itemsRepo,

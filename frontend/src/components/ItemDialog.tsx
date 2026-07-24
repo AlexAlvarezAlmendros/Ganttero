@@ -1,9 +1,10 @@
 import { useState } from "react";
-import type { CreateItemInput } from "../api/items.js";
+import { type CreateItemInput, useImproveDescription } from "../api/items.js";
 import type { Item, ItemType } from "../api/types.js";
 import { Button } from "./ds/Button.js";
 import { Dialog } from "./ds/Dialog.js";
 import { Input } from "./ds/Input.js";
+import { MarkdownEditor } from "./ds/MarkdownEditor.js";
 import { Select } from "./ds/Select.js";
 
 /**
@@ -38,7 +39,9 @@ export function ItemDialog({
 }) {
 	const [type, setType] = useState<ItemType>(initial?.type ?? "task");
 	const [title, setTitle] = useState(initial?.title ?? "");
+	const [description, setDescription] = useState(initial?.description ?? "");
 	const [parent, setParent] = useState("");
+	const improve = useImproveDescription();
 	const [start, setStart] = useState(initial?.start_date ?? "");
 	const [end, setEnd] = useState(initial?.end_date ?? "");
 	const [estimate, setEstimate] = useState(
@@ -71,7 +74,7 @@ export function ItemDialog({
 								type,
 								title: title.trim(),
 								parent_id: parent ? Number(parent) : null,
-								description: initial?.description ?? null,
+								description: description.trim() || null,
 								start_date: start || null,
 								end_date: end || null,
 								estimate_min: estimate ? Number(estimate) : null,
@@ -102,6 +105,16 @@ export function ItemDialog({
 					value={title}
 					onChange={setTitle}
 					placeholder="qué hay que hacer"
+				/>
+				<MarkdownEditor
+					label="Descripción (opcional)"
+					value={description}
+					onChange={setDescription}
+					placeholder="detalles, pasos, notas… (markdown)"
+					improve={{
+						run: async (current) =>
+							(await improve.mutateAsync(current)).improved,
+					}}
 				/>
 				<div
 					style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 10 }}

@@ -46,7 +46,7 @@ export const createItemSchema = z
 		parent_id: z.number().int().positive().nullish(),
 		type: itemTypeSchema,
 		title: z.string().trim().min(1).max(200),
-		description: z.string().trim().max(2000).nullish(),
+		description: z.string().trim().max(5000).nullish(),
 		start_date: isoDaySchema.nullish(),
 		end_date: isoDaySchema.nullish(),
 		estimate_min: z.number().int().positive().nullish(),
@@ -64,7 +64,7 @@ export type CreateItem = z.infer<typeof createItemSchema>;
 export const updateItemSchema = z
 	.object({
 		title: z.string().trim().min(1).max(200),
-		description: z.string().trim().max(2000).nullable(),
+		description: z.string().trim().max(5000).nullable(),
 		status: itemStatusSchema,
 		parent_id: z.number().int().positive().nullable(),
 		start_date: isoDaySchema.nullable(),
@@ -80,3 +80,14 @@ export type UpdateItem = z.infer<typeof updateItemSchema>;
 export const idParamSchema = z.object({
 	id: z.coerce.number().int().positive(),
 });
+
+/** "Mejorar formato": texto libre → markdown mejorado (sin estado, sin id). */
+export const improveDescriptionSchema = z.object({
+	text: z.string().trim().min(1).max(5000),
+});
+export type ImproveDescription = z.infer<typeof improveDescriptionSchema>;
+
+export const improvedDescriptionSchema = z.object({
+	improved: z.string(),
+});
+export type ImprovedDescription = z.infer<typeof improvedDescriptionSchema>;

@@ -1,6 +1,6 @@
 # Ganttero — Roadmap del proyecto
 
-> Última actualización: 2026-07-23
+> Última actualización: 2026-07-24
 
 App web *self-hosted* de planificación personal: **Kanban + Gantt multi-escala**, captura de tareas por **voz** con IA local (Whisper + Gemma 4) y **automatización Gantt→Kanban**. Un solo usuario, todo en el homeserver, datos en el NAS; el único punto en la nube es la API de GitHub.
 
@@ -22,6 +22,7 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 5 | Captura por voz integrada | ✅ Hecho | [05-voz-integrada.md](plans/05-voz-integrada.md) | Crear una tarea hablando 10 s es más rápido que teclearla |
 | 6 | Integración GitHub | ✅ Hecho | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
 | 7 | Pulido y despliegue estable | ✅ Hecho | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
+| 8 | Descripciones markdown + IA | ✅ Hecho | [08-descripciones-markdown.md](plans/08-descripciones-markdown.md) | Editor WYSIWYG (markdown por debajo) con botón "mejorar formato" (Gemma local) |
 
 ## Foco actual
 

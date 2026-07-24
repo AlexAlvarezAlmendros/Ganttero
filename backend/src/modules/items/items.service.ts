@@ -1,5 +1,6 @@
 import { DomainError, NotFoundError } from "../../lib/errors.js";
 import type { ProjectsRepo } from "../projects/projects.repo.js";
+import type { Describer } from "./items.describer.js";
 import type { ItemsRepo } from "./items.repo.js";
 import type { CreateItem, Item, ItemType, UpdateItem } from "./items.schema.js";
 
@@ -29,7 +30,23 @@ export class ItemsService {
 			item: Item,
 			previous: Item["status"],
 		) => Promise<void>,
+		/** IA local para "mejorar formato" (Fase 8); opcional: sin ella el
+		 * endpoint responde 422 y la UI conserva el texto original. */
+		private readonly describer?: Describer,
 	) {}
+
+	/** Reformatea + enriquece una descripción con la IA local (markdown). */
+	async improveDescription(text: string): Promise<string> {
+		if (!this.describer) {
+			throw new DomainError("la IA de descripciones no está configurada");
+		}
+		try {
+			return await this.describer.improve(text);
+		} catch (error) {
+			const cause = error instanceof Error ? error.message : "error";
+			throw new DomainError(`la IA no pudo mejorar la descripción (${cause})`);
+		}
+	}
 
 	async listByProject(projectId: number): Promise<Item[]> {
 		const project = await this.projectsRepo.getById(projectId);
