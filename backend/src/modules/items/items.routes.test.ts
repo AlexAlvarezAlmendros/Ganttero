@@ -141,3 +141,53 @@ describe("rutas /items", () => {
 		expect(otherItem.json().key).toBe("HL-1");
 	});
 });
+
+describe("POST /items/improve-description", () => {
+	it("devuelve el markdown mejorado por la IA", async () => {
+		const db = await createDbClient(":memory:");
+		await migrateUp(db, migrations, { now: fixedNow });
+		const app = buildApp({
+			db,
+			now: fixedNow,
+			describer: { improve: async (t) => `## ${t}\n- [ ] hecho` },
+		});
+
+		const res = await app.inject({
+			method: "POST",
+			url: "/items/improve-description",
+			payload: { text: "regar plantas" },
+		});
+		expect(res.statusCode).toBe(200);
+		expect(res.json().improved).toBe("## regar plantas\n- [ ] hecho");
+	});
+
+	it("devuelve 400 si el texto está vacío", async () => {
+		const db = await createDbClient(":memory:");
+		await migrateUp(db, migrations, { now: fixedNow });
+		const app = buildApp({
+			db,
+			now: fixedNow,
+			describer: { improve: async (t) => t },
+		});
+
+		const res = await app.inject({
+			method: "POST",
+			url: "/items/improve-description",
+			payload: { text: "   " },
+		});
+		expect(res.statusCode).toBe(400);
+	});
+
+	it("devuelve 422 si la IA no está configurada", async () => {
+		const db = await createDbClient(":memory:");
+		await migrateUp(db, migrations, { now: fixedNow });
+		const app = buildApp({ db, now: fixedNow });
+
+		const res = await app.inject({
+			method: "POST",
+			url: "/items/improve-description",
+			payload: { text: "algo" },
+		});
+		expect(res.statusCode).toBe(422);
+	});
+});

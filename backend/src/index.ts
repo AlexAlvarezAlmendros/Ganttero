@@ -5,6 +5,7 @@ import { migrateUp } from "./db/migrations.js";
 import { migrations } from "./db/migrations/index.js";
 import { RealGitHubClient } from "./modules/github/github.client.js";
 import type { GithubService } from "./modules/github/github.service.js";
+import { OllamaDescriber } from "./modules/items/items.describer.js";
 import { VoiceService } from "./modules/voice/voice.service.js";
 import { OllamaStructurer } from "./modules/voice/voice.structurer.js";
 import { PythonStt } from "./modules/voice/voice.stt.js";
@@ -22,9 +23,14 @@ const voiceService = new VoiceService(
 		model: env.OLLAMA_MODEL,
 	}),
 );
+const describer = new OllamaDescriber({
+	baseUrl: env.OLLAMA_BASE_URL,
+	model: env.OLLAMA_MODEL,
+});
 const app = buildApp({
 	logger: env.NODE_ENV !== "test",
 	db,
+	describer,
 	voice: { service: voiceService, audioDir: env.AUDIO_DIR },
 	github: {
 		client: new RealGitHubClient(env.GITHUB_TOKEN),

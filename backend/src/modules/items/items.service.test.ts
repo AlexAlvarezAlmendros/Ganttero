@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { DomainError, NotFoundError } from "../../lib/errors.js";
 import type { ProjectsRepo } from "../projects/projects.repo.js";
+import type { Describer } from "./items.describer.js";
 import type { ItemsRepo } from "./items.repo.js";
 import type { Item } from "./items.schema.js";
 import { ItemsService } from "./items.service.js";
@@ -158,5 +159,49 @@ describe("ItemsService.update", () => {
 		hook.mockClear();
 		await service.update(10, { title: "otro título" });
 		expect(hook).not.toHaveBeenCalled();
+	});
+});
+
+describe("ItemsService.improveDescription", () => {
+	it("delega en el describer y devuelve el markdown mejorado", async () => {
+		const describer: Describer = {
+			improve: vi.fn().mockResolvedValue("## Mejorada\n- [ ] paso 1"),
+		};
+		const service = new ItemsService(
+			mockItemsRepo(),
+			mockProjectsRepo(),
+			fixedNow,
+			undefined,
+			describer,
+		);
+
+		const result = await service.improveDescription("texto suelto");
+		expect(result).toBe("## Mejorada\n- [ ] paso 1");
+		expect(describer.improve).toHaveBeenCalledWith("texto suelto");
+	});
+
+	it("da 422 (DomainError) si no hay IA configurada", async () => {
+		const service = new ItemsService(
+			mockItemsRepo(),
+			mockProjectsRepo(),
+			fixedNow,
+		);
+
+		await expect(service.improveDescription("x")).rejects.toThrow(DomainError);
+	});
+
+	it("envuelve el fallo del describer en DomainError (no bloquea la UI)", async () => {
+		const describer: Describer = {
+			improve: vi.fn().mockRejectedValue(new Error("Ollama respondió 500")),
+		};
+		const service = new ItemsService(
+			mockItemsRepo(),
+			mockProjectsRepo(),
+			fixedNow,
+			undefined,
+			describer,
+		);
+
+		await expect(service.improveDescription("x")).rejects.toThrow(DomainError);
 	});
 });
