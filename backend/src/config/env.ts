@@ -28,6 +28,8 @@ const envSchema = z.object({
 	AUDIO_DIR: z.string().min(1).default("./data/audios"),
 	/** Token de GitHub con scope mínimo (Fase 6). Nunca loggearlo. */
 	GITHUB_TOKEN: z.string().min(1).optional(),
+	/** Polling de smart commits en segundos; 0 = desactivado. */
+	GITHUB_POLL_SECONDS: z.coerce.number().int().min(0).max(86_400).default(300),
 });
 
 export type Env = z.infer<typeof envSchema>;

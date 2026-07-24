@@ -6,6 +6,7 @@ import {
 	useLocation,
 	useNavigate,
 } from "react-router";
+import { useGithubLinks, useLinkRepo, useUnlinkRepo } from "./api/github.js";
 import { useHealth } from "./api/health.js";
 import {
 	useCreateItem,
@@ -92,6 +93,10 @@ export function App() {
 	const items = useItems(active?.id ?? null);
 	const kanban = useKanban(active?.id ?? null);
 	const settings = useSettings();
+	const githubLinks = useGithubLinks(active?.id ?? null);
+	const linkRepo = useLinkRepo();
+	const unlinkRepo = useUnlinkRepo();
+	const activeRepo = githubLinks.data?.[0];
 
 	const createProject = useCreateProject();
 	const updateProject = useUpdateProject();
@@ -181,6 +186,7 @@ export function App() {
 						}}
 					>
 						VENTANA: HOY + {settings.data?.kanban_window_days ?? 14}D
+						{activeRepo ? ` · ${activeRepo.repo_full_name} ↗` : ""}
 					</span>
 				</div>
 				<Button
@@ -350,13 +356,28 @@ export function App() {
 			{projectEdit !== null && (
 				<ProjectDialog
 					project={projectEdit === "new" ? null : projectEdit}
+					{...(projectEdit !== "new" &&
+					projectEdit?.id === active?.id &&
+					activeRepo
+						? { currentRepo: activeRepo.repo_full_name }
+						: {})}
 					onClose={() => setProjectEdit(null)}
 					onSave={(data) => {
+						const syncRepo = (projectId: number) => {
+							const current = projectId === active?.id ? activeRepo : undefined;
+							if (current && current.repo_full_name !== data.repo) {
+								unlinkRepo.mutate({ linkId: current.id, projectId });
+							}
+							if (data.repo && current?.repo_full_name !== data.repo) {
+								linkRepo.mutate({ projectId, repo: data.repo });
+							}
+						};
 						if (data.id !== undefined) {
 							updateProject.mutate(
 								{ id: data.id, name: data.name, description: data.description },
 								{
-									onSuccess: () => {
+									onSuccess: (saved) => {
+										syncRepo(saved.id);
 										setToast(`${data.name} actualizado`);
 										setProjectEdit(null);
 									},
@@ -367,6 +388,7 @@ export function App() {
 							createProject.mutate(data, {
 								onSuccess: (project) => {
 									setProjectId(project.id);
+									syncRepo(project.id);
 									setToast(`${project.name} creado · planifica en el gantt`);
 									setProjectEdit(null);
 								},

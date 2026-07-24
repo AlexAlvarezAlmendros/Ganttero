@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useItemCommits } from "../api/github.js";
 import { useTimelog } from "../api/timelogs.js";
 import type { Item, ItemStatus } from "../api/types.js";
 import { formatDuration } from "../lib/format.js";
@@ -37,6 +38,7 @@ export function TaskDetail({
 		task.estimate_min !== null ? String(task.estimate_min) : "",
 	);
 	const timelog = useTimelog(task.id);
+	const commits = useItemCommits(task.id);
 
 	return (
 		<Dialog
@@ -126,15 +128,41 @@ export function TaskDetail({
 				</div>
 				<div>
 					<MicroLabel style={{ marginBottom: 8 }}>GITHUB</MicroLabel>
-					<div
-						style={{
-							fontFamily: "var(--font-mono)",
-							fontSize: 11,
-							color: "var(--ink-5)",
-						}}
-					>
-						// cita {task.key} en un commit para enlazarlo — fase 6
-					</div>
+					{(commits.data ?? []).map((commit) => (
+						<div
+							key={commit.sha}
+							style={{
+								fontFamily: "var(--font-mono)",
+								fontSize: 11,
+								color: "var(--ink-3)",
+								padding: "6px 0",
+								borderBottom: "1px solid var(--border-1)",
+								display: "flex",
+								gap: 10,
+							}}
+						>
+							<a
+								href={commit.url}
+								target="_blank"
+								rel="noreferrer"
+								style={{ color: "var(--accent)" }}
+							>
+								{commit.sha.slice(0, 7)}
+							</a>
+							<span style={{ flex: 1 }}>{commit.message}</span>
+						</div>
+					))}
+					{(commits.data ?? []).length === 0 && (
+						<div
+							style={{
+								fontFamily: "var(--font-mono)",
+								fontSize: 11,
+								color: "var(--ink-5)",
+							}}
+						>
+							// cita {task.key} en un commit para enlazarlo
+						</div>
+					)}
 				</div>
 			</div>
 		</Dialog>

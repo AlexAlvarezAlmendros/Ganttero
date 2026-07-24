@@ -37,6 +37,7 @@ describe("migración 001-modelo-inicial", () => {
 			"dependency",
 			"github_link",
 			"item",
+			"item_commit",
 			"project",
 			"schema_migrations",
 			"settings",

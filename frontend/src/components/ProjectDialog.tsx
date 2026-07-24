@@ -6,23 +6,28 @@ import { Input } from "./ds/Input.js";
 
 export function ProjectDialog({
 	project,
+	currentRepo,
 	onClose,
 	onSave,
 }: {
 	/** null = crear nuevo */
 	project: Project | null;
+	/** Primer repo enlazado (Fase 6), si lo hay. */
+	currentRepo?: string;
 	onClose: () => void;
 	onSave: (data: {
 		id?: number;
 		name: string;
 		key_prefix: string;
 		description: string | null;
+		repo: string;
 	}) => void;
 }) {
 	const isNew = project === null;
 	const [name, setName] = useState(project?.name ?? "");
 	const [prefix, setPrefix] = useState(project?.key_prefix ?? "");
 	const [description, setDescription] = useState(project?.description ?? "");
+	const [repo, setRepo] = useState(currentRepo ?? "");
 
 	return (
 		<Dialog
@@ -46,6 +51,7 @@ export function ProjectDialog({
 								name: name.trim().toUpperCase(),
 								key_prefix: prefix.trim().toUpperCase(),
 								description: description.trim() || null,
+								repo: repo.trim(),
 							})
 						}
 					>
@@ -66,6 +72,13 @@ export function ProjectDialog({
 					value={description}
 					onChange={setDescription}
 					placeholder="una línea basta"
+				/>
+				<Input
+					label="Repo GitHub"
+					value={repo}
+					onChange={setRepo}
+					placeholder="owner/repo"
+					hint="opcional — smart commits con la clave del proyecto"
 				/>
 				<Input
 					label="Prefijo de clave"

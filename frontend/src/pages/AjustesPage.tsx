@@ -1,3 +1,4 @@
+import { useGithubStatus } from "../api/github.js";
 import { useSettings, useUpdateSettings } from "../api/settings.js";
 import { MicroLabel } from "../components/ds/MicroLabel.js";
 import { Select } from "../components/ds/Select.js";
@@ -8,6 +9,7 @@ export function AjustesPage({
 }: { onSaved: (message: string) => void }) {
 	const settings = useSettings();
 	const updateSettings = useUpdateSettings();
+	const github = useGithubStatus();
 
 	return (
 		<div
@@ -92,11 +94,25 @@ export function AjustesPage({
 				<span
 					style={{
 						fontFamily: "var(--font-mono)",
+						fontSize: 11,
+						color: github.data?.token_configured
+							? "var(--ink-2)"
+							: "var(--sig-blocked)",
+					}}
+				>
+					{github.data?.token_configured
+						? `token configurado · polling cada ${github.data.poll_seconds} s`
+						: "sin token — añade GITHUB_TOKEN al entorno del backend"}
+				</span>
+				<span
+					style={{
+						fontFamily: "var(--font-mono)",
 						fontSize: 10,
 						color: "var(--ink-5)",
 					}}
 				>
-					// token con scope mínimo y smart commits — fase 6
+					// el token vive en el entorno, nunca en la app; smart commits: cita
+					GP-42 (o «fixes GP-42» para cerrarla) en el mensaje
 				</span>
 			</div>
 		</div>

@@ -2,6 +2,11 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import type { Client } from "./db/client.js";
 import { ConflictError, DomainError, NotFoundError } from "./lib/errors.js";
+import type { GitHubClient } from "./modules/github/github.client.js";
+import { GithubRepo } from "./modules/github/github.repo.js";
+import { githubRoutes } from "./modules/github/github.routes.js";
+import type { GithubStatus } from "./modules/github/github.schema.js";
+import { GithubService } from "./modules/github/github.service.js";
 import { ItemsRepo } from "./modules/items/items.repo.js";
 import { itemsRoutes } from "./modules/items/items.routes.js";
 import { ItemsService } from "./modules/items/items.service.js";
@@ -25,10 +30,12 @@ export interface BuildAppOptions {
 	now?: () => Date;
 	/** Pipeline de voz (Fase 5): inyectado desde index.ts; los tests lo mockean. */
 	voice?: { service: VoiceService; audioDir: string };
+	/** GitHub (Fase 6): cliente inyectado; los tests lo mockean. */
+	github?: { client: GitHubClient; status: GithubStatus };
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-	const { logger = false, db, now, voice } = options;
+	const { logger = false, db, now, voice, github } = options;
 	const app = Fastify({ logger });
 
 	app.setErrorHandler((error, _request, reply) => {
@@ -81,6 +88,18 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		app.register(settingsRoutes(settingsRepo));
 		if (voice) {
 			app.register(voiceRoutes(voice.service, settingsRepo, voice.audioDir));
+		}
+		if (github) {
+			const githubService = new GithubService(
+				new GithubRepo(db),
+				projectsRepo,
+				github.client,
+				itemsService,
+				now,
+				(message) => app.log.info(message),
+			);
+			app.decorate("githubService", githubService);
+			app.register(githubRoutes(githubService, github.status));
 		}
 	}
 
