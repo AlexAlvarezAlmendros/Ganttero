@@ -27,6 +27,7 @@ export function ItemDialog({
 	hint,
 	onClose,
 	onSave,
+	onRecordVoice,
 }: {
 	projectId: number;
 	items: Item[];
@@ -36,6 +37,8 @@ export function ItemDialog({
 	hint?: string;
 	onClose: () => void;
 	onSave: (data: CreateItemInput) => void;
+	/** Abre la captura por voz para rellenar el formulario (opcional). */
+	onRecordVoice?: () => void;
 }) {
 	const [type, setType] = useState<ItemType>(initial?.type ?? "task");
 	const [title, setTitle] = useState(initial?.title ?? "");
@@ -62,6 +65,16 @@ export function ItemDialog({
 			onClose={onClose}
 			footer={
 				<>
+					{onRecordVoice && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={onRecordVoice}
+							style={{ marginRight: "auto" }}
+						>
+							🎙 GRABAR
+						</Button>
+					)}
 					<Button variant="ghost" size="sm" onClick={onClose}>
 						CANCELAR
 					</Button>
