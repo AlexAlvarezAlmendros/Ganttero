@@ -83,6 +83,9 @@ export function App() {
 		initial: ItemDialogInitial;
 		hint: string;
 	} | null>(null);
+	// Fuerza el remontado de ItemDialog cuando la voz rellena un formulario ya
+	// abierto (los campos leen `initial` solo al montar).
+	const [captureNonce, setCaptureNonce] = useState(0);
 
 	const health = useHealth();
 	const projects = useProjects();
@@ -111,6 +114,16 @@ export function App() {
 		return () => clearTimeout(timer);
 	}, [toast]);
 
+	// El botón "+ NUEVA TAREA" abre el formulario manual directamente; la voz
+	// pasa a ser un botón dentro del propio formulario.
+	const openCreate = () => {
+		if (!active) return;
+		setVoicePrefill(null);
+		setCreatingItem(true);
+	};
+
+	// Atajo de captura rápida por voz (icono del TopBar): abre la grabación;
+	// al terminar, el formulario se abre pre-relleno.
 	const openVoice = () => {
 		if (!active) return;
 		setCapturingVoice(true);
@@ -193,9 +206,9 @@ export function App() {
 					variant="ghost"
 					size="sm"
 					disabled={!active}
-					onClick={openVoice}
+					onClick={openCreate}
 				>
-					+ NUEVA TAREA (VOZ)
+					+ NUEVA TAREA
 				</Button>
 			</div>
 			<main style={{ padding: "10px 24px 30px", flex: 1 }}>
@@ -300,36 +313,12 @@ export function App() {
 					}
 				/>
 			)}
-			{capturingVoice && (
-				<VoiceCapture
-					onClose={() => setCapturingVoice(false)}
-					onCaptured={(captured) => {
-						setCapturingVoice(false);
-						setVoicePrefill({
-							initial: {
-								title: captured.item.title,
-								type: captured.item.type,
-								start_date: captured.item.start_date,
-								end_date: captured.item.end_date,
-								estimate_min: captured.item.estimate_min,
-								description: captured.item.description,
-							},
-							hint: captured.transcript,
-						});
-						setCreatingItem(true);
-					}}
-					onFallback={(reason) => {
-						setCapturingVoice(false);
-						setVoicePrefill(null);
-						setCreatingItem(true);
-						if (reason) setToast(reason);
-					}}
-				/>
-			)}
 			{creatingItem && active && (
 				<ItemDialog
+					key={captureNonce}
 					projectId={active.id}
 					items={items.data ?? []}
+					onRecordVoice={() => setCapturingVoice(true)}
 					{...(voicePrefill
 						? { initial: voicePrefill.initial, hint: voicePrefill.hint }
 						: {})}
@@ -351,6 +340,35 @@ export function App() {
 							onError: (error) => setToast(`error: ${error.message}`),
 						})
 					}
+				/>
+			)}
+			{capturingVoice && (
+				<VoiceCapture
+					onClose={() => setCapturingVoice(false)}
+					onCaptured={(captured) => {
+						setCapturingVoice(false);
+						setVoicePrefill({
+							initial: {
+								title: captured.item.title,
+								type: captured.item.type,
+								start_date: captured.item.start_date,
+								end_date: captured.item.end_date,
+								estimate_min: captured.item.estimate_min,
+								description: captured.item.description,
+							},
+							hint: captured.transcript,
+						});
+						// Remonta el formulario abierto para que tome el pre-relleno.
+						setCaptureNonce((nonce) => nonce + 1);
+						setCreatingItem(true);
+					}}
+					onFallback={(reason) => {
+						// Degrada a formulario manual: lo abre si venía del atajo del
+						// TopBar, o lo deja tal cual si ya estaba abierto.
+						setCapturingVoice(false);
+						setCreatingItem(true);
+						if (reason) setToast(reason);
+					}}
 				/>
 			)}
 			{projectEdit !== null && (
