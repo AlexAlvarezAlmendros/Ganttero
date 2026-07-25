@@ -191,7 +191,7 @@ export function GanttView({
 							style={{
 								display: "flex",
 								borderBottom: "1px solid var(--border-1)",
-								cursor: "pointer",
+								cursor: "var(--cur-pointer)",
 							}}
 						>
 							<div
@@ -257,7 +257,10 @@ export function GanttView({
 											left: `${span.left}%`,
 											width: `${span.width}%`,
 											touchAction: "none",
-											cursor: dragging !== 0 ? "grabbing" : "grab",
+											cursor:
+												dragging !== 0
+													? "var(--cur-grabbing)"
+													: "var(--cur-grab)",
 											...(isEpic
 												? {
 														background: "var(--accent-dim)",

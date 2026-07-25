@@ -1,0 +1,46 @@
+/* Cursores tematizados (Fase 8.3) — flecha con acento lima, manita y
+   grab/grabbing en lima, servidos desde /public/cursors. El hotspot va en
+   píxeles del tamaño intrínseco del SVG; el keyword final es el fallback
+   (navegadores sin cursores SVG, p. ej. Safari). */
+:root {
+	--cur-default: url("/cursors/default.svg") 3 2, default;
+	--cur-pointer: url("/cursors/pointer.svg") 10 3, pointer;
+	--cur-grab: url("/cursors/grab.svg") 15 13, grab;
+	--cur-grabbing: url("/cursors/grabbing.svg") 15 13, grabbing;
+}
+
+body {
+	cursor: var(--cur-default);
+}
+
+a,
+button,
+select,
+summary,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="date"] {
+	cursor: var(--cur-pointer);
+}
+
+button:disabled,
+[aria-disabled="true"],
+.gtr-btn:disabled {
+	cursor: not-allowed;
+}
+
+/* La escritura conserva el cursor de texto. */
+input[type="text"],
+input[type="number"],
+input[type="search"],
+textarea,
+[contenteditable="true"],
+.gtr-md__content .ProseMirror {
+	cursor: text;
+}
+
+/* Arrastrables (tarjetas del Kanban, barras del Gantt). */
+[draggable="true"] {
+	cursor: var(--cur-grab);
+}

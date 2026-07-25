@@ -5,6 +5,7 @@
 @import "./typography.css";
 @import "./spacing.css";
 @import "./effects.css";
+@import "./cursors.css";
 
 body {
 	margin: 0;
