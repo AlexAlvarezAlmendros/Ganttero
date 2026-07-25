@@ -98,7 +98,7 @@ export function VoiceCapture({
 										? "1px solid var(--sig-late)"
 										: "1px solid var(--border-2)",
 								background: "var(--bg-1)",
-								cursor: "pointer",
+								cursor: "var(--cur-pointer)",
 								fontSize: 26,
 								color: phase === "rec" ? "var(--sig-late)" : "var(--accent)",
 								fontFamily: "var(--font-mono)",
