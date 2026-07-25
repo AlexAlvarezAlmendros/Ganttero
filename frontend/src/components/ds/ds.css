@@ -521,7 +521,7 @@
 }
 .gtr-md__tool:disabled {
 	opacity: 0.35;
-	cursor: not-allowed;
+	cursor: var(--cur-not-allowed);
 }
 .gtr-md__improve {
 	padding: 6px 11px;
@@ -542,7 +542,7 @@
 }
 .gtr-md__improve:disabled {
 	opacity: 0.4;
-	cursor: not-allowed;
+	cursor: var(--cur-not-allowed);
 }
 .gtr-md__placeholder {
 	position: absolute;
