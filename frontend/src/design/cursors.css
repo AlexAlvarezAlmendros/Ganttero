@@ -7,6 +7,7 @@
 	--cur-pointer: url("/cursors/pointer.svg") 10 3, pointer;
 	--cur-grab: url("/cursors/grab.svg") 15 13, grab;
 	--cur-grabbing: url("/cursors/grabbing.svg") 15 13, grabbing;
+	--cur-not-allowed: url("/cursors/not-allowed.svg") 14 14, not-allowed;
 }
 
 body {
@@ -27,7 +28,7 @@ input[type="date"] {
 button:disabled,
 [aria-disabled="true"],
 .gtr-btn:disabled {
-	cursor: not-allowed;
+	cursor: var(--cur-not-allowed);
 }
 
 /* La escritura conserva el cursor de texto. */
