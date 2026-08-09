@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import type { ProjectScope } from "../api/items.js";
 import type { Project } from "../api/types.js";
 
 /** Selector `PROYECTO ▾` del kit: filas indexadas con ✎/✕ y + NUEVO PROYECTO. */
 export function ProjectSelector({
 	projects,
 	active,
+	scope,
 	onSelect,
 	onNew,
 	onEdit,
@@ -12,7 +14,9 @@ export function ProjectSelector({
 }: {
 	projects: Project[];
 	active: Project | null;
-	onSelect: (id: number) => void;
+	/** `"all"` = vista de todos los proyectos a la vez. */
+	scope: ProjectScope | null;
+	onSelect: (scope: ProjectScope) => void;
 	onNew: () => void;
 	onEdit: (project: Project) => void;
 	onDelete: (project: Project) => void;
@@ -59,7 +63,7 @@ export function ProjectSelector({
 				>
 					PROYECTO
 				</span>
-				{active?.name ?? "—"}
+				{scope === "all" ? "TODOS LOS PROYECTOS" : (active?.name ?? "—")}
 				<span style={{ color: "var(--accent)", fontSize: 9 }}>▾</span>
 			</button>
 			{open && (
@@ -74,6 +78,51 @@ export function ProjectSelector({
 						zIndex: 150,
 					}}
 				>
+					{/* Botón, no fila: a diferencia de los proyectos no lleva ✎/✕
+					    dentro, así que puede ser un control de pleno derecho. */}
+					<button
+						type="button"
+						className="gt-projrow"
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 10,
+							width: "100%",
+							textAlign: "left",
+							border: "none",
+							padding: "10px 12px",
+							borderBottom: "1px solid var(--border-2)",
+							cursor: "var(--cur-pointer)",
+							background: scope === "all" ? "var(--bg-2)" : "none",
+						}}
+						onClick={() => {
+							onSelect("all");
+							setOpen(false);
+						}}
+					>
+						<span style={{ color: "var(--accent)", fontSize: 10 }}>/00</span>
+						<span
+							style={{
+								flex: 1,
+								fontSize: 11.5,
+								fontWeight: scope === "all" ? 700 : 400,
+								color: "var(--ink-1)",
+							}}
+						>
+							TODOS LOS PROYECTOS
+							<span
+								style={{
+									display: "block",
+									fontSize: 9.5,
+									fontWeight: 400,
+									color: "var(--ink-5)",
+									marginTop: 2,
+								}}
+							>
+								kanban, gantt y backlog de todo el trabajo
+							</span>
+						</span>
+					</button>
 					{projects.map((project, index) => (
 						<div
 							key={project.id}
@@ -85,7 +134,10 @@ export function ProjectSelector({
 								padding: "10px 12px",
 								borderBottom: "1px solid var(--border-1)",
 								cursor: "var(--cur-pointer)",
-								background: project.id === active?.id ? "var(--bg-2)" : "none",
+								background:
+									scope !== "all" && project.id === active?.id
+										? "var(--bg-2)"
+										: "none",
 							}}
 							onClick={() => {
 								onSelect(project.id);
@@ -99,7 +151,8 @@ export function ProjectSelector({
 								style={{
 									flex: 1,
 									fontSize: 11.5,
-									fontWeight: project.id === active?.id ? 700 : 400,
+									fontWeight:
+										scope !== "all" && project.id === active?.id ? 700 : 400,
 									color: "var(--ink-1)",
 								}}
 							>

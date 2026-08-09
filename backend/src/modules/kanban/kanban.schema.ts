@@ -17,7 +17,8 @@ export const kanbanCardSchema = itemSchema.extend({
 export type KanbanCard = z.infer<typeof kanbanCardSchema>;
 
 export const kanbanBoardSchema = z.object({
-	project_id: z.number().int(),
+	/** `null` = tablero de TODOS los proyectos. */
+	project_id: z.number().int().nullable(),
 	today: z.string(),
 	window_days: z.number().int(),
 	columns: z.record(itemStatusSchema, z.array(kanbanCardSchema)),

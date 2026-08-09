@@ -23,6 +23,8 @@ export const DATE_FILTERS: Array<{ value: DateFilter; label: string }> = [
 
 export interface BacklogFilters {
 	status: ItemStatus | "all";
+	/** Solo aplica en la vista de todos los proyectos. */
+	project: number | "all";
 	date: DateFilter;
 	/** Épica: `all` todas · `none` sin épica · id de la épica. */
 	epic: number | "all" | "none";
@@ -33,6 +35,7 @@ export interface BacklogFilters {
 
 export const NO_FILTERS: BacklogFilters = {
 	status: "all",
+	project: "all",
 	date: "all",
 	epic: "all",
 	from: "",
@@ -42,6 +45,7 @@ export const NO_FILTERS: BacklogFilters = {
 export function hasActiveFilters(filters: BacklogFilters): boolean {
 	return (
 		filters.status !== "all" ||
+		filters.project !== "all" ||
 		filters.date !== "all" ||
 		filters.epic !== "all" ||
 		filters.from !== "" ||
@@ -131,6 +135,10 @@ export function filterBacklog(
 		.filter((item) => item.type !== "epic")
 		.filter(
 			(item) => filters.status === "all" || item.status === filters.status,
+		)
+		.filter(
+			(item) =>
+				filters.project === "all" || item.project_id === filters.project,
 		)
 		.filter((item) => matchesDate(item, filters.date, today, windowDays))
 		.filter((item) => matchesBounds(item, filters.from, filters.to))

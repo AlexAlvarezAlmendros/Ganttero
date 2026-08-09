@@ -59,6 +59,13 @@ Formato: *Como usuario, quiero … para …*
 - Devuelve un **formulario pre-relleno** (título, tipo, fechas sugeridas, estimación) para confirmar/editar.
 - Si la IA no entiende bien, **fallback a formulario manual** sin bloquear.
 
+### 3.2b. Ámbito: un proyecto o todos
+- El selector `PROYECTO ▾` incluye **TODOS LOS PROYECTOS**: Kanban, Gantt y Backlog pasan a mostrar el trabajo de **todos** los proyectos a la vez.
+- Las reglas no cambian: la ventana del Kanban es un ajuste global y la derivación es la misma; solo cambia el conjunto de entrada.
+- Cada ítem se identifica por su **clave** (`GP-42`, `OT-7`); el Backlog añade columna y filtro de proyecto, y el Gantt etiqueta cada raíz con su proyecto.
+- Al crear una tarea en este modo, el formulario **pregunta a qué proyecto va**. La jerarquía nunca cruza proyectos: una tarea solo puede colgar de una épica **del suyo**.
+- GitHub se enlaza a un proyecto concreto, así que esa parte solo aplica con un proyecto seleccionado.
+
 ### 3.3. Kanban
 - Columnas por estado: **Backlog · En curso · Bloqueada · Hecha**.
 - **Drag & drop** entre columnas.

@@ -29,6 +29,14 @@ function rowToItem(row: Row): Item {
 export class ItemsRepo {
 	constructor(private readonly db: Client) {}
 
+	/** Todos los proyectos a la vez (vista "TODOS LOS PROYECTOS"). */
+	async listAll(): Promise<Item[]> {
+		const result = await this.db.execute(
+			`${SELECT} ORDER BY item.start_date IS NULL, item.start_date, item.id`,
+		);
+		return result.rows.map(rowToItem);
+	}
+
 	async listByProject(projectId: number): Promise<Item[]> {
 		const result = await this.db.execute({
 			sql: `${SELECT} WHERE item.project_id = ? ORDER BY item.start_date IS NULL, item.start_date, item.id`,

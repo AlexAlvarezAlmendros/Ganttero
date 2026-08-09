@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { type CreateItemInput, useImproveDescription } from "../api/items.js";
-import type { Item, ItemType } from "../api/types.js";
+import type { Item, ItemType, Project } from "../api/types.js";
 import { parentCandidates, parentFieldLabel } from "../lib/hierarchy.js";
 import { Button } from "./ds/Button.js";
 import { Dialog } from "./ds/Dialog.js";
@@ -23,6 +23,7 @@ export interface ItemDialogInitial {
 
 export function ItemDialog({
 	projectId,
+	projects,
 	items,
 	initial,
 	hint,
@@ -30,7 +31,10 @@ export function ItemDialog({
 	onSave,
 	onRecordVoice,
 }: {
-	projectId: number;
+	/** `null` en la vista de todos los proyectos: el formulario lo pregunta. */
+	projectId: number | null;
+	/** Proyectos elegibles cuando no hay uno fijado. */
+	projects?: Project[];
 	items: Item[];
 	/** Pre-relleno (captura por voz de la Fase 5). */
 	initial?: ItemDialogInitial;
@@ -45,6 +49,11 @@ export function ItemDialog({
 	const [title, setTitle] = useState(initial?.title ?? "");
 	const [description, setDescription] = useState(initial?.description ?? "");
 	const [parent, setParent] = useState("");
+	// Sin proyecto fijado (vista de todos), el alta necesita elegir uno.
+	const [project, setProject] = useState(
+		projectId !== null ? String(projectId) : "",
+	);
+	const targetProject = project ? Number(project) : null;
 	const improve = useImproveDescription();
 	const [start, setStart] = useState(initial?.start_date ?? "");
 	const [end, setEnd] = useState(initial?.end_date ?? "");
@@ -52,7 +61,11 @@ export function ItemDialog({
 		initial?.estimate_min != null ? String(initial.estimate_min) : "",
 	);
 
-	const parents = parentCandidates(items, type);
+	// Un padre solo vale dentro de su propio proyecto (lo valida el backend).
+	const parents = parentCandidates(
+		items.filter((item) => item.project_id === targetProject),
+		type,
+	);
 
 	return (
 		<Dialog
@@ -76,10 +89,14 @@ export function ItemDialog({
 					</Button>
 					<Button
 						size="sm"
-						disabled={!title.trim() || (type === "subtask" && !parent)}
+						disabled={
+							!title.trim() ||
+							targetProject === null ||
+							(type === "subtask" && !parent)
+						}
 						onClick={() =>
 							onSave({
-								project_id: projectId,
+								project_id: targetProject as number,
 								type,
 								title: title.trim(),
 								parent_id: parent ? Number(parent) : null,
@@ -108,6 +125,23 @@ export function ItemDialog({
 					>
 						«{hint}»
 					</span>
+				)}
+				{projectId === null && (
+					<Select
+						label="Proyecto"
+						value={project}
+						onChange={(value) => {
+							setProject(value);
+							setParent("");
+						}}
+						options={[
+							{ value: "", label: "— elige —" },
+							...(projects ?? []).map((candidate) => ({
+								value: String(candidate.id),
+								label: `${candidate.key_prefix} · ${candidate.name}`,
+							})),
+						]}
+					/>
 				)}
 				<Input
 					label="Título"

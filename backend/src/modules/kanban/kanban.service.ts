@@ -138,10 +138,25 @@ export class KanbanService {
 		if (!project) {
 			throw new NotFoundError(`proyecto ${projectId} no existe`);
 		}
-		const [items, settings] = await Promise.all([
-			this.itemsRepo.listByProject(projectId),
-			this.settingsRepo.get(),
-		]);
+		return this.derive(
+			projectId,
+			await this.itemsRepo.listByProject(projectId),
+		);
+	}
+
+	/**
+	 * Tablero de TODOS los proyectos: mismas reglas de ventana y prioridad
+	 * (la ventana es un ajuste global), solo cambia el conjunto de entrada.
+	 */
+	async boardAll(): Promise<KanbanBoard> {
+		return this.derive(null, await this.itemsRepo.listAll());
+	}
+
+	private async derive(
+		projectId: number | null,
+		items: Item[],
+	): Promise<KanbanBoard> {
+		const settings = await this.settingsRepo.get();
 		const today = localDayIso(this.now());
 		return {
 			project_id: projectId,

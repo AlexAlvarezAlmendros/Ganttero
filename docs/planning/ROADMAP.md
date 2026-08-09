@@ -27,10 +27,13 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 10 | Reasignar el padre de un ítem | ✅ Hecho | [10-reasignar-padre.md](plans/10-reasignar-padre.md) | Cambiar la épica de una tarea desde su detalle, sin borrar y recrear |
 | 11 | Pulido de UX | 🔄 En curso | [11-pulido-ux.md](plans/11-pulido-ux.md) | Cajón continuo: fricciones que salen usando la app a diario |
 | 12 | Backlog con filtros | ✅ Hecho | [12-backlog.md](plans/12-backlog.md) | Todas las tareas del proyecto en una vista, filtrables por estado, fecha y épica |
+| 13 | Vista "Todos los proyectos" | ✅ Hecho | [13-todos-los-proyectos.md](plans/13-todos-los-proyectos.md) | Kanban, Gantt y Backlog con el trabajo de todos los proyectos a la vez |
 
 ## Foco actual
 
-**Fases 0–10 y 12 implementadas.** La Fase 12 tapó el agujero que dejaba la derivación del Kanban: un ítem sin fechas no aparecía en ninguna vista. Ahora `/backlog` lo lista todo, con filtros de estado, fecha y épica.
+**Fases 0–10, 12 y 13 implementadas.** La Fase 13 añadió el ámbito TODOS LOS PROYECTOS al selector: endpoints agregados (`GET /items`, `GET /kanban`) que reutilizan la misma derivación, y las tres vistas respetando el ámbito.
+
+La Fase 12 tapó el agujero que dejaba la derivación del Kanban: un ítem sin fechas no aparecía en ninguna vista. Ahora `/backlog` lo lista todo, con filtros de estado, fecha y épica.
 
 La Fase 10 añadió el selector de padre en el detalle del ítem: el backend ya validaba el reparentado (mismo proyecto, jerarquía, sin ciclos), así que solo faltaba la UI y los tests.
 
