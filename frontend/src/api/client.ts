@@ -10,9 +10,22 @@ export class ApiError extends Error {
 	}
 }
 
+/**
+ * Aviso de sesión caducada: cualquier 401 lo emite y el gate de autenticación
+ * lo escucha para volver al login sin que cada hook tenga que enterarse.
+ */
+export const UNAUTHORIZED_EVENT = "ganttero:unauthorized";
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-	const response = await fetch(`/api${path}`, init);
+	// `same-origin` explícito: la cookie de sesión viaja, nada más.
+	const response = await fetch(`/api${path}`, {
+		credentials: "same-origin",
+		...init,
+	});
 	if (!response.ok) {
+		if (response.status === 401 && !path.startsWith("/auth/")) {
+			window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+		}
 		let detail = `${init?.method ?? "GET"} ${path} → ${response.status}`;
 		try {
 			const body = (await response.json()) as { error?: string };

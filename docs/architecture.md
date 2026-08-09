@@ -141,6 +141,7 @@ El Gantt es la **fuente de verdad del *cuándo***; el Kanban es una **vista deri
 ## 6. Seguridad
 
 Modelo de amenaza reducido: **un usuario, red local**. Aun así:
+- **Autenticación (Fase 9):** login de un solo usuario dentro del propio backend (sin servicio de auth aparte). Credenciales en el `.env` del homeserver — `AUTH_USERNAME` + `AUTH_PASSWORD_HASH` (**scrypt** de `node:crypto`, nunca la contraseña en claro ni en la DB). La sesión es un token firmado con HMAC-SHA256 (`AUTH_SECRET`) que viaja en una cookie **`HttpOnly`, `SameSite=Lax`**: el JS de la página no puede leerla y el navegador no la envía en peticiones cross-site. Un hook global responde **401** en toda la API salvo `/health` y `/auth/*`; los intentos fallidos se frenan con **backoff creciente por IP**. Con `NODE_ENV=production` el backend no arranca sin credenciales configuradas. Rotar `AUTH_SECRET` cierra todas las sesiones.
 - **Red:** la app escucha en la LAN; no se expone a Internet salvo el endpoint de webhook de GitHub (si se usa) tras reverse proxy/túnel. Alternativa sin exponer nada: **polling** a la API de GitHub.
 - **Secretos:** el *personal access token* de GitHub se guarda **fuera del código** (variable de entorno / fichero de secretos en el homeserver), nunca en la DB en claro ni en el front. Scope mínimo del token (solo lectura de repos si no se necesita escribir).
 - **Webhook:** verificar la **firma** (`X-Hub-Signature-256`) con `timingSafeEqual` antes de procesar el payload.

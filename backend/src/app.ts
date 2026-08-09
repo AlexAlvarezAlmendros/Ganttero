@@ -1,7 +1,20 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import type { Client } from "./db/client.js";
-import { ConflictError, DomainError, NotFoundError } from "./lib/errors.js";
+import {
+	ConflictError,
+	DomainError,
+	NotFoundError,
+	TooManyRequestsError,
+	UnauthorizedError,
+} from "./lib/errors.js";
+import { readSessionCookie } from "./modules/auth/auth.cookie.js";
+import {
+	PUBLIC_PATHS,
+	authRoutes,
+	disabledAuthRoutes,
+} from "./modules/auth/auth.routes.js";
+import type { AuthService } from "./modules/auth/auth.service.js";
 import type { GitHubClient } from "./modules/github/github.client.js";
 import { GithubRepo } from "./modules/github/github.repo.js";
 import { githubRoutes } from "./modules/github/github.routes.js";
@@ -35,10 +48,15 @@ export interface BuildAppOptions {
 	github?: { client: GitHubClient; status: GithubStatus };
 	/** IA de descripciones (Fase 8): "mejorar formato"; los tests la mockean. */
 	describer?: Describer;
+	/**
+	 * Autenticación (Fase 9). Si no se pasa, la API queda abierta: `index.ts`
+	 * solo lo permite fuera de producción (ver `config/env.ts`).
+	 */
+	auth?: { service: AuthService; cookieSecure: boolean };
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-	const { logger = false, db, now, voice, github, describer } = options;
+	const { logger = false, db, now, voice, github, describer, auth } = options;
 	const app = Fastify({ logger });
 
 	app.setErrorHandler((error, _request, reply) => {
@@ -57,12 +75,41 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		if (error instanceof ConflictError) {
 			return reply.status(409).send({ error: error.message });
 		}
+		if (error instanceof UnauthorizedError) {
+			return reply.status(401).send({ error: error.message });
+		}
+		if (error instanceof TooManyRequestsError) {
+			return reply
+				.status(429)
+				.header("retry-after", String(error.retryAfterSeconds))
+				.send({ error: error.message });
+		}
 		if (error instanceof DomainError) {
 			return reply.status(422).send({ error: error.message });
 		}
 		app.log.error(error);
 		return reply.status(500).send({ error: "error interno" });
 	});
+
+	// Puerta única: se registra ANTES que las rutas, de modo que cualquier ruta
+	// nueva nace protegida salvo que se añada explícitamente a PUBLIC_PATHS.
+	if (auth) {
+		app.addHook("onRequest", async (request) => {
+			const path = request.url.split("?")[0] ?? "";
+			if (PUBLIC_PATHS.has(path)) {
+				return;
+			}
+			const username = auth.service.verifyToken(
+				readSessionCookie(request.headers.cookie),
+			);
+			if (username === null) {
+				throw new UnauthorizedError();
+			}
+		});
+		app.register(authRoutes(auth.service, auth.cookieSecure));
+	} else {
+		app.register(disabledAuthRoutes());
+	}
 
 	app.get("/health", async (_request, reply) => {
 		if (!db) {

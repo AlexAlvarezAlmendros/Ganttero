@@ -20,3 +20,22 @@ export class DomainError extends Error {
 		this.name = "DomainError";
 	}
 }
+
+/** Sin sesión válida (Fase 9). Mapea a 401. */
+export class UnauthorizedError extends Error {
+	constructor(message = "no autenticado") {
+		super(message);
+		this.name = "UnauthorizedError";
+	}
+}
+
+/** Demasiados intentos de login (Fase 9). Mapea a 429 con `Retry-After`. */
+export class TooManyRequestsError extends Error {
+	constructor(
+		message: string,
+		readonly retryAfterSeconds: number,
+	) {
+		super(message);
+		this.name = "TooManyRequestsError";
+	}
+}

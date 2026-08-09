@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPasswordHash } from "../modules/auth/auth.password.js";
 
 /**
  * Única puerta de entrada a las variables de entorno (regla de CLAUDE.md:
@@ -30,7 +31,33 @@ const envSchema = z.object({
 	GITHUB_TOKEN: z.string().min(1).optional(),
 	/** Polling de smart commits en segundos; 0 = desactivado. */
 	GITHUB_POLL_SECONDS: z.coerce.number().int().min(0).max(86_400).default(300),
+	/** Autenticación (Fase 9): usuario único. Obligatorias en producción. */
+	AUTH_USERNAME: z.string().min(1).optional(),
+	/** Hash scrypt generado con `pnpm --filter backend auth:hash`. */
+	AUTH_PASSWORD_HASH: z
+		.string()
+		.refine(isValidPasswordHash, "no tiene formato scrypt$N$r$p$salt$hash")
+		.optional(),
+	/** Secreto de firma de la sesión (`openssl rand -hex 32`). Rotarlo cierra sesiones. */
+	AUTH_SECRET: z.string().min(32, "usa al menos 32 caracteres").optional(),
+	/** Duración de la sesión en días. */
+	AUTH_SESSION_DAYS: z.coerce.number().min(0.01).max(365).default(30),
+	/**
+	 * `Secure` en la cookie: solo si se sirve por HTTPS. En la LAN (HTTP) debe
+	 * quedar en `false` o el navegador descartaría la cookie y no habría login.
+	 */
+	AUTH_COOKIE_SECURE: z
+		.enum(["true", "false"])
+		.default("false")
+		.transform((value) => value === "true"),
 });
+
+/** Variables que definen al usuario: o están las tres, o no está ninguna. */
+const AUTH_KEYS = [
+	"AUTH_USERNAME",
+	"AUTH_PASSWORD_HASH",
+	"AUTH_SECRET",
+] as const;
 
 export type Env = z.infer<typeof envSchema>;
 
@@ -43,5 +70,46 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 			.join("; ");
 		throw new Error(`configuración de entorno inválida — ${issues}`);
 	}
-	return parsed.data;
+	const env = parsed.data;
+
+	// Reglas cruzadas de la auth: en producción no se despliega sin login, y a
+	// medias tampoco se arranca (media configuración = falsa sensación de seguridad).
+	const missing = AUTH_KEYS.filter((key) => env[key] === undefined);
+	if (missing.length > 0 && missing.length < AUTH_KEYS.length) {
+		throw new Error(
+			`configuración de entorno inválida — autenticación incompleta, faltan: ${missing.join(", ")}`,
+		);
+	}
+	if (missing.length === AUTH_KEYS.length && env.NODE_ENV === "production") {
+		throw new Error(
+			`configuración de entorno inválida — en producción son obligatorias: ${AUTH_KEYS.join(", ")}`,
+		);
+	}
+	return env;
+}
+
+export interface AuthEnvConfig {
+	username: string;
+	passwordHash: string;
+	secret: string;
+	sessionDays: number;
+	cookieSecure: boolean;
+}
+
+/** Config de auth lista para el service, o `null` si la app corre sin login. */
+export function authConfigFromEnv(env: Env): AuthEnvConfig | null {
+	if (
+		env.AUTH_USERNAME === undefined ||
+		env.AUTH_PASSWORD_HASH === undefined ||
+		env.AUTH_SECRET === undefined
+	) {
+		return null;
+	}
+	return {
+		username: env.AUTH_USERNAME,
+		passwordHash: env.AUTH_PASSWORD_HASH,
+		secret: env.AUTH_SECRET,
+		sessionDays: env.AUTH_SESSION_DAYS,
+		cookieSecure: env.AUTH_COOKIE_SECURE,
+	};
 }

@@ -6,6 +6,7 @@ import {
 	useLocation,
 	useNavigate,
 } from "react-router";
+import { useLogout, useSession } from "./api/auth.js";
 import { useGithubLinks, useLinkRepo, useUnlinkRepo } from "./api/github.js";
 import { useHealth } from "./api/health.js";
 import {
@@ -27,6 +28,7 @@ import { GanttView } from "./components/GanttView.js";
 import { ItemDialog } from "./components/ItemDialog.js";
 import type { ItemDialogInitial } from "./components/ItemDialog.js";
 import { KanbanBoard } from "./components/KanbanBoard.js";
+import { AuthDisabledNotice } from "./components/LoginPage.js";
 import { ProjectDelete } from "./components/ProjectDelete.js";
 import { ProjectDialog } from "./components/ProjectDialog.js";
 import { ProjectSelector } from "./components/ProjectSelector.js";
@@ -73,6 +75,7 @@ export function App() {
 	}, []);
 
 	const [toast, setToast] = useState<string | null>(null);
+	const [authWarningSeen, setAuthWarningSeen] = useState(false);
 	const [projectId, setProjectId] = useState<number | null>(null);
 	const [projectEdit, setProjectEdit] = useState<Project | null | "new">(null);
 	const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
@@ -88,6 +91,8 @@ export function App() {
 	const [captureNonce, setCaptureNonce] = useState(0);
 
 	const health = useHealth();
+	const session = useSession();
+	const logout = useLogout();
 	const projects = useProjects();
 	const active = useMemo(() => {
 		const list = projects.data ?? [];
@@ -158,9 +163,19 @@ export function App() {
 				active={view}
 				onNav={(id) => navigate(`/${id}`)}
 				right={
-					<IconButton label="Capturar por voz" onClick={openVoice}>
-						●
-					</IconButton>
+					<>
+						<IconButton label="Capturar por voz" onClick={openVoice}>
+							●
+						</IconButton>
+						{session.data?.auth_enabled && (
+							<IconButton
+								label={`Salir${session.data.username ? ` (${session.data.username})` : ""}`}
+								onClick={() => logout.mutate()}
+							>
+								⏻
+							</IconButton>
+						)}
+					</>
 				}
 			/>
 			<div
@@ -434,6 +449,9 @@ export function App() {
 						})
 					}
 				/>
+			)}
+			{session.data?.auth_enabled === false && !authWarningSeen && (
+				<AuthDisabledNotice onDismiss={() => setAuthWarningSeen(true)} />
 			)}
 			{toast && (
 				<div style={{ position: "fixed", bottom: 52, right: 24, zIndex: 200 }}>

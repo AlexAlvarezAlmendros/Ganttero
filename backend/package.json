@@ -8,6 +8,7 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"db:migrate": "tsx src/db/migrate.ts up",
+		"auth:hash": "tsx src/modules/auth/auth.hash-cli.ts",
 		"db:rollback": "tsx src/db/migrate.ts down",
 		"build": "tsc -p tsconfig.build.json",
 		"start": "node dist/index.js"

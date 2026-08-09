@@ -29,7 +29,9 @@ describe("useHealth", () => {
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 		expect(result.current.data).toEqual({ status: "ok" });
-		expect(fetchMock).toHaveBeenCalledWith("/api/health", undefined);
+		expect(fetchMock).toHaveBeenCalledWith("/api/health", {
+			credentials: "same-origin",
+		});
 	});
 
 	it("marca error si el backend no responde", async () => {

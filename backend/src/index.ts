@@ -1,8 +1,9 @@
 import { buildApp } from "./app.js";
-import { loadEnv } from "./config/env.js";
+import { authConfigFromEnv, loadEnv } from "./config/env.js";
 import { createDbClient } from "./db/client.js";
 import { migrateUp } from "./db/migrations.js";
 import { migrations } from "./db/migrations/index.js";
+import { AuthService } from "./modules/auth/auth.service.js";
 import { RealGitHubClient } from "./modules/github/github.client.js";
 import type { GithubService } from "./modules/github/github.service.js";
 import { OllamaDescriber } from "./modules/items/items.describer.js";
@@ -27,10 +28,25 @@ const describer = new OllamaDescriber({
 	baseUrl: env.OLLAMA_BASE_URL,
 	model: env.OLLAMA_MODEL,
 });
+// Auth (Fase 9): en producción `loadEnv` ya garantiza que existe la config.
+const authConfig = authConfigFromEnv(env);
 const app = buildApp({
 	logger: env.NODE_ENV !== "test",
 	db,
 	describer,
+	...(authConfig
+		? {
+				auth: {
+					service: new AuthService({
+						username: authConfig.username,
+						passwordHash: authConfig.passwordHash,
+						secret: authConfig.secret,
+						sessionDays: authConfig.sessionDays,
+					}),
+					cookieSecure: authConfig.cookieSecure,
+				},
+			}
+		: {}),
 	voice: { service: voiceService, audioDir: env.AUDIO_DIR },
 	github: {
 		client: new RealGitHubClient(env.GITHUB_TOKEN),
@@ -40,6 +56,12 @@ const app = buildApp({
 		},
 	},
 });
+
+if (!authConfig) {
+	app.log.warn(
+		"AUTENTICACIÓN DESACTIVADA: la API responde sin login. Define AUTH_USERNAME, AUTH_PASSWORD_HASH y AUTH_SECRET.",
+	);
+}
 
 // Migraciones al arrancar: app self-hosted, sin paso de deploy separado.
 const applied = await migrateUp(db, migrations, {

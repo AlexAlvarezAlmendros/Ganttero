@@ -8,6 +8,9 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
+      # Manda sobre el `.env` (que puede venir copiado del ejemplo con
+      # NODE_ENV=development): en el homeserver la auth es obligatoria.
+      NODE_ENV: production
       DATABASE_URL: file:/data/ganttero.db
       AUDIO_DIR: /data/audios
       STT_PYTHON: /app/stt/.venv/bin/python
