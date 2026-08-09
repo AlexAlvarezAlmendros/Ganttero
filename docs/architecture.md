@@ -43,7 +43,8 @@ Monolito modular pragmático: un único backend que sirve la API y orquesta IA y
 │  │  ├─ Módulos REST (proyectos, tareas, …)           │  │
 │  │  ├─ Motor de automatización (Gantt→Kanban)        │  │
 │  │  ├─ Orquestador de voz (audio→JSON)               │  │
-│  │  └─ Cliente GitHub (API + webhook/polling)        │  │
+│  │  ├─ Cliente GitHub (API + webhook/polling)        │  │
+│  │  └─ Servidor MCP (agentes de IA, bearer propio)   │  │
 │  └────────┬──────────────┬───────────────┬───────────┘  │
 │           │              │               │              │
 │    ┌──────▼─────┐  ┌─────▼──────┐  ┌─────▼──────────┐   │
@@ -91,6 +92,11 @@ Sigue una separación por módulo (routes / service / repo / schema Zod). Respon
 
 ### 3.5. Integración GitHub
 Cliente contra la API de GitHub con *personal access token*; webhook entrante (o polling) para eventos de commits/PRs. Ver §6 (seguridad) y §8 (trade-offs).
+
+### 3.6. Servidor MCP (agentes de IA)
+`POST /mcp` habla **MCP sobre Streamable HTTP** (JSON-RPC 2.0) para que agentes como Claude Code lean el trabajo y lo actualicen. Vive **dentro** del backend Fastify —se despliega con la app y se alcanza desde cualquier máquina de la LAN— e implementa el protocolo a mano, sin dependencias nuevas.
+
+Autenticación **propia por bearer** (`MCP_TOKEN`): un agente no hace login interactivo, así que la cookie de sesión no aplica. La ruta queda exenta del hook global de sesión y pone su propia puerta; el bearer no abre el resto de la API REST, y sin `MCP_TOKEN` el módulo ni se registra. Cada herramienta delega en el servicio de siempre: es una fachada, no una segunda implementación de las reglas.
 
 ---
 

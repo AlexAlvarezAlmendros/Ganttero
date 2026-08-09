@@ -84,6 +84,46 @@ Restaurar: parar el backend, copiar el `.db` del backup sobre
 - Salud de la IA: si Ollama está caído, la captura por voz degrada a
   formulario manual con toast — la app sigue funcionando.
 
+## 4b. MCP para agentes de IA (Fase 14)
+
+Ganttero expone un servidor **MCP** para que agentes como Claude Code consulten
+qué tareas hay, en qué estado, y las actualicen conforme trabajan. Está
+**apagado por defecto**: sin `MCP_TOKEN` la ruta ni siquiera se registra.
+
+```bash
+# 1. Genera el token y añádelo al .env del homeserver
+openssl rand -hex 32
+# MCP_TOKEN=<lo que salga>
+
+docker compose up -d --build   # recarga el .env
+```
+
+El endpoint sale por el mismo nginx que la API, sin tocar la configuración:
+
+```bash
+# 2. Compruébalo desde la máquina donde vas a usar el agente
+curl -s -X POST http://homeserver:8080/api/mcp \
+  -H "authorization: Bearer $MCP_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | head -c 200
+```
+
+```bash
+# 3. Conéctalo a Claude Code (en cualquier máquina de la LAN)
+claude mcp add --transport http ganttero http://homeserver:8080/api/mcp \
+  --header "Authorization: Bearer <MCP_TOKEN>"
+```
+
+Herramientas disponibles: `list_projects`, `list_items`, `get_item`,
+`create_item`, `update_item`, `set_item_status` y `get_kanban`.
+`set_item_status` es la de seguimiento: al pasar a `in_progress` abre un tramo
+de tiempo y al pasar a `done` lo cierra, igual que desde la UI.
+
+**Seguridad:** el token es una llave de la API de tareas — trátalo como el de
+GitHub (fuera del repo, solo en el `.env` del homeserver). Es independiente del
+login del navegador: no da acceso al resto de la API REST, y rotarlo es cambiar
+la variable y reiniciar. No expongas el puerto fuera de la LAN sin VPN.
+
 ## 5. Actualizar
 
 ```bash

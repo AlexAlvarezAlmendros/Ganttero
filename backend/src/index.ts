@@ -47,6 +47,8 @@ const app = buildApp({
 				},
 			}
 		: {}),
+	// MCP (Fase 14): solo si hay token. Sin él la ruta no existe.
+	...(env.MCP_TOKEN ? { mcp: { token: env.MCP_TOKEN } } : {}),
 	voice: { service: voiceService, audioDir: env.AUDIO_DIR },
 	github: {
 		client: new RealGitHubClient(env.GITHUB_TOKEN),

@@ -31,6 +31,12 @@ const envSchema = z.object({
 	GITHUB_TOKEN: z.string().min(1).optional(),
 	/** Polling de smart commits en segundos; 0 = desactivado. */
 	GITHUB_POLL_SECONDS: z.coerce.number().int().min(0).max(86_400).default(300),
+	/**
+	 * Token bearer del endpoint MCP (Fase 14). Sin él, el módulo no se registra
+	 * y la ruta no existe: los agentes se habilitan explícitamente, nunca por
+	 * defecto. Genera uno con `openssl rand -hex 32`.
+	 */
+	MCP_TOKEN: z.string().min(32, "usa al menos 32 caracteres").optional(),
 	/** Autenticación (Fase 9): usuario único. Obligatorias en producción. */
 	AUTH_USERNAME: z.string().min(1).optional(),
 	/** Hash scrypt generado con `pnpm --filter backend auth:hash`. */

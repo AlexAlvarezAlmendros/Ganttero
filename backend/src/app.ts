@@ -25,6 +25,8 @@ import { ItemsRepo } from "./modules/items/items.repo.js";
 import { itemsRoutes } from "./modules/items/items.routes.js";
 import { ItemsService } from "./modules/items/items.service.js";
 import { kanbanRoutes } from "./modules/kanban/kanban.routes.js";
+import { MCP_PATH, mcpRoutes } from "./modules/mcp/mcp.routes.js";
+import { McpService } from "./modules/mcp/mcp.service.js";
 import { KanbanService } from "./modules/kanban/kanban.service.js";
 import { ProjectsRepo } from "./modules/projects/projects.repo.js";
 import { projectsRoutes } from "./modules/projects/projects.routes.js";
@@ -53,10 +55,24 @@ export interface BuildAppOptions {
 	 * solo lo permite fuera de producción (ver `config/env.ts`).
 	 */
 	auth?: { service: AuthService; cookieSecure: boolean };
+	/**
+	 * Endpoint MCP para agentes de IA (Fase 14). Sin token no se registra:
+	 * la ruta simplemente no existe.
+	 */
+	mcp?: { token: string };
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-	const { logger = false, db, now, voice, github, describer, auth } = options;
+	const {
+		logger = false,
+		db,
+		now,
+		voice,
+		github,
+		describer,
+		auth,
+		mcp,
+	} = options;
 	const app = Fastify({ logger });
 
 	app.setErrorHandler((error, _request, reply) => {
@@ -97,6 +113,11 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		app.addHook("onRequest", async (request) => {
 			const path = request.url.split("?")[0] ?? "";
 			if (PUBLIC_PATHS.has(path)) {
+				return;
+			}
+			// El MCP trae su propio bearer (un agente no hace login interactivo):
+			// su ruta lo valida, así que la cookie no aplica aquí.
+			if (mcp && path === MCP_PATH) {
 				return;
 			}
 			const username = auth.service.verifyToken(
@@ -147,6 +168,19 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		app.register(timelogRoutes(timelogService, itemsService));
 		app.register(kanbanRoutes(kanbanService));
 		app.register(settingsRoutes(settingsRepo));
+		if (mcp) {
+			app.register(
+				mcpRoutes(
+					new McpService({
+						projects: projectsService,
+						items: itemsService,
+						kanban: kanbanService,
+						timelog: timelogService,
+					}),
+					mcp.token,
+				),
+			);
+		}
 		if (voice) {
 			app.register(voiceRoutes(voice.service, settingsRepo, voice.audioDir));
 		}
