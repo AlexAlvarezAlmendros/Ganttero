@@ -7,6 +7,7 @@ import {
 	useNavigate,
 } from "react-router";
 import { useLogout, useSession } from "./api/auth.js";
+import { NO_CAPABILITIES, useCapabilities } from "./api/capabilities.js";
 import { useGithubLinks, useLinkRepo, useUnlinkRepo } from "./api/github.js";
 import { useHealth } from "./api/health.js";
 import {
@@ -99,6 +100,8 @@ export function App() {
 	const session = useSession();
 	const logout = useLogout();
 	const projects = useProjects();
+	// Qué ofrece este despliegue (self-hosted lo tiene todo; Vercel no la voz).
+	const capabilities = useCapabilities().data ?? NO_CAPABILITIES;
 	const allProjects = scope === "all";
 	/** Proyecto concreto en foco; `null` en la vista de todos los proyectos. */
 	const active = useMemo(() => {
@@ -142,6 +145,7 @@ export function App() {
 	// Atajo de captura rápida por voz (icono del TopBar): abre la grabación;
 	// al terminar, el formulario se abre pre-relleno.
 	const openVoice = () => {
+		if (!capabilities.voice) return;
 		if (!active && !allProjects) return;
 		setCapturingVoice(true);
 	};
@@ -176,9 +180,11 @@ export function App() {
 				onNav={(id) => navigate(`/${id}`)}
 				right={
 					<>
-						<IconButton label="Capturar por voz" onClick={openVoice}>
-							●
-						</IconButton>
+						{capabilities.voice && (
+							<IconButton label="Capturar por voz" onClick={openVoice}>
+								●
+							</IconButton>
+						)}
 						{session.data?.auth_enabled && (
 							<IconButton
 								label={`Salir${session.data.username ? ` (${session.data.username})` : ""}`}
@@ -362,7 +368,9 @@ export function App() {
 					projectId={active?.id ?? null}
 					projects={projects.data ?? []}
 					items={items.data ?? []}
-					onRecordVoice={() => setCapturingVoice(true)}
+					{...(capabilities.voice
+						? { onRecordVoice: () => setCapturingVoice(true) }
+						: {})}
 					{...(voicePrefill
 						? { initial: voicePrefill.initial, hint: voicePrefill.hint }
 						: {})}

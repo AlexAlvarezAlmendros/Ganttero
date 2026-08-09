@@ -13,6 +13,7 @@ El único componente en la nube es la integración con **GitHub**.
 - [Documentación funcional](docs/functional.md) — qué hace, casos de uso, reglas y flujos.
 - [Arquitectura (documento técnico)](docs/architecture.md) — componentes, modelo de datos, seguridad.
 - [Despliegue en el homeserver](docs/deploy.md) — Docker compose, NAS, backups.
+- [Despliegue en Vercel](docs/deploy-vercel.md) — con base de datos Turso; qué funciona y qué no.
 - [Roadmap](docs/planning/ROADMAP.md) — plan por fases (fuente de verdad de la planificación).
 - [Design system](docs/design/ganttero-ui-kit/README.md) — el UI kit de claude.ai/design que guía el frontend.
 
@@ -48,6 +49,11 @@ La app pide usuario y contraseña (un solo usuario, credenciales en el `.env`); 
 vive en una cookie `HttpOnly` firmada. En producción el backend no arranca sin ellas.
 
 Detalles, backups y observabilidad en [docs/deploy.md](docs/deploy.md).
+
+También se puede desplegar en **Vercel con una base de datos Turso**
+([docs/deploy-vercel.md](docs/deploy-vercel.md)). Kanban, Gantt, backlog,
+cronometraje, login y MCP funcionan igual; la captura por voz se queda fuera
+(necesita Python, ffmpeg y Ollama) y la UI la esconde sola.
 
 ## Estado
 

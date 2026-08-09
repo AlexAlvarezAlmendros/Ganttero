@@ -12,7 +12,7 @@ import { OllamaStructurer } from "./modules/voice/voice.structurer.js";
 import { PythonStt } from "./modules/voice/voice.stt.js";
 
 const env = loadEnv();
-const db = await createDbClient(env.DATABASE_URL);
+const db = await createDbClient(env.DATABASE_URL, env.DATABASE_AUTH_TOKEN);
 const voiceService = new VoiceService(
 	new PythonStt({
 		pythonBin: env.STT_PYTHON,
@@ -49,7 +49,10 @@ const app = buildApp({
 		: {}),
 	// MCP (Fase 14): solo si hay token. Sin él la ruta no existe.
 	...(env.MCP_TOKEN ? { mcp: { token: env.MCP_TOKEN } } : {}),
-	voice: { service: voiceService, audioDir: env.AUDIO_DIR },
+	// La voz necesita Python + ffmpeg + Ollama: en serverless no se registra.
+	...(env.VOICE_ENABLED
+		? { voice: { service: voiceService, audioDir: env.AUDIO_DIR } }
+		: {}),
 	github: {
 		client: new RealGitHubClient(env.GITHUB_TOKEN),
 		status: {
@@ -58,6 +61,10 @@ const app = buildApp({
 		},
 	},
 });
+
+if (!env.VOICE_ENABLED) {
+	app.log.info("captura por voz desactivada (VOICE_ENABLED=false)");
+}
 
 if (!authConfig) {
 	app.log.warn(

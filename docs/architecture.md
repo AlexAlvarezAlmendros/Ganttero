@@ -88,6 +88,7 @@ Sigue una separación por módulo (routes / service / repo / schema Zod). Respon
 
 ### 3.4. Persistencia
 - **`sqld` (libSQL):** servidor SQLite con la DX de Turso, en local. Fichero de base de datos en el NAS.
+- **Turso gestionado (`libsql://` + token):** alternativa cuando la app se despliega en Vercel. Mismo cliente y mismas migraciones; solo cambian `DATABASE_URL` y `DATABASE_AUTH_TOKEN`. Ver [deploy-vercel.md](deploy-vercel.md).
 - **Audios:** guardados en el NAS (o descartados tras transcribir, configurable).
 
 ### 3.5. Integración GitHub
