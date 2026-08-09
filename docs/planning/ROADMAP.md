@@ -26,10 +26,13 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 9 | Autenticación básica | ✅ Hecho | [09-autenticacion.md](plans/09-autenticacion.md) | La app pide usuario/contraseña una vez y ninguna ruta de datos responde sin sesión |
 | 10 | Reasignar el padre de un ítem | ✅ Hecho | [10-reasignar-padre.md](plans/10-reasignar-padre.md) | Cambiar la épica de una tarea desde su detalle, sin borrar y recrear |
 | 11 | Pulido de UX | 🔄 En curso | [11-pulido-ux.md](plans/11-pulido-ux.md) | Cajón continuo: fricciones que salen usando la app a diario |
+| 12 | Backlog con filtros | ✅ Hecho | [12-backlog.md](plans/12-backlog.md) | Todas las tareas del proyecto en una vista, filtrables por estado, fecha y épica |
 
 ## Foco actual
 
-**Fases 0–10 implementadas.** La Fase 10 añadió el selector de padre en el detalle del ítem: el backend ya validaba el reparentado (mismo proyecto, jerarquía, sin ciclos), así que solo faltaba la UI y los tests.
+**Fases 0–10 y 12 implementadas.** La Fase 12 tapó el agujero que dejaba la derivación del Kanban: un ítem sin fechas no aparecía en ninguna vista. Ahora `/backlog` lo lista todo, con filtros de estado, fecha y épica.
+
+La Fase 10 añadió el selector de padre en el detalle del ítem: el backend ya validaba el reparentado (mismo proyecto, jerarquía, sin ciclos), así que solo faltaba la UI y los tests.
 
 La Fase 9 añadió el login de un solo usuario dentro del backend Fastify (sin servicio de auth aparte, modelo Umami): credenciales en `.env` con hash scrypt, sesión en cookie firmada `HttpOnly` y rate limit por IP.
 

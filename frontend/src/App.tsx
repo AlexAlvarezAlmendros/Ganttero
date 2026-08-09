@@ -24,6 +24,7 @@ import {
 } from "./api/projects.js";
 import { useSettings } from "./api/settings.js";
 import type { Item, ItemStatus, Project } from "./api/types.js";
+import { BacklogView } from "./components/BacklogView.js";
 import { GanttView } from "./components/GanttView.js";
 import { ItemDialog } from "./components/ItemDialog.js";
 import type { ItemDialogInitial } from "./components/ItemDialog.js";
@@ -44,12 +45,14 @@ import { AjustesPage } from "./pages/AjustesPage.js";
 const NAV = [
 	{ id: "kanban", label: "KANBAN" },
 	{ id: "gantt", label: "GANTT" },
+	{ id: "backlog", label: "BACKLOG" },
 	{ id: "ajustes", label: "AJUSTES" },
 ];
 
 const TITLES: Record<string, string> = {
 	kanban: "KANBAN",
 	gantt: "GANTT",
+	backlog: "BACKLOG",
 	ajustes: "AJUSTES",
 };
 
@@ -266,6 +269,17 @@ export function App() {
 										},
 									)
 								}
+							/>
+						}
+					/>
+					<Route
+						path="/backlog"
+						element={
+							<BacklogView
+								items={items.data ?? []}
+								today={today}
+								windowDays={settings.data?.kanban_window_days ?? 14}
+								onOpen={setOpenTask}
 							/>
 						}
 					/>
