@@ -124,6 +124,36 @@ describe("TaskDetail — reasignar el padre", () => {
 		expect(onSave).not.toHaveBeenCalled();
 	});
 
+	it("en la vista de todos los proyectos no ofrece épicas de otro proyecto", () => {
+		const otherEpic = makeItem(9, "epic", null);
+		const client = new QueryClient({
+			defaultOptions: {
+				queries: { retry: false },
+				mutations: { retry: false },
+			},
+		});
+		render(
+			<QueryClientProvider client={client}>
+				<TaskDetail
+					task={task}
+					items={[...items, { ...otherEpic, project_id: 2, key: "OT-1" }]}
+					onClose={vi.fn()}
+					onStatus={vi.fn()}
+					onSave={vi.fn()}
+					onDelete={vi.fn()}
+				/>
+			</QueryClientProvider>,
+		);
+		const select = screen.getByLabelText(
+			"Épica (opcional)",
+		) as HTMLSelectElement;
+		expect(Array.from(select.options).map((option) => option.value)).toEqual([
+			"",
+			"1",
+			"2",
+		]);
+	});
+
 	it("una épica no ofrece selector de padre y no lo manda en el patch", () => {
 		const onSave = renderDetail(epicA);
 		expect(screen.queryByLabelText(/épica|tarea madre/i)).toBeNull();

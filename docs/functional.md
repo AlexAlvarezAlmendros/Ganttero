@@ -59,6 +59,13 @@ Formato: *Como usuario, quiero … para …*
 - Devuelve un **formulario pre-relleno** (título, tipo, fechas sugeridas, estimación) para confirmar/editar.
 - Si la IA no entiende bien, **fallback a formulario manual** sin bloquear.
 
+### 3.2b. Ámbito: un proyecto o todos
+- El selector `PROYECTO ▾` incluye **TODOS LOS PROYECTOS**: Kanban, Gantt y Backlog pasan a mostrar el trabajo de **todos** los proyectos a la vez.
+- Las reglas no cambian: la ventana del Kanban es un ajuste global y la derivación es la misma; solo cambia el conjunto de entrada.
+- Cada ítem se identifica por su **clave** (`GP-42`, `OT-7`); el Backlog añade columna y filtro de proyecto, y el Gantt etiqueta cada raíz con su proyecto.
+- Al crear una tarea en este modo, el formulario **pregunta a qué proyecto va**. La jerarquía nunca cruza proyectos: una tarea solo puede colgar de una épica **del suyo**.
+- GitHub se enlaza a un proyecto concreto, así que esa parte solo aplica con un proyecto seleccionado.
+
 ### 3.3. Kanban
 - Columnas por estado: **Backlog · En curso · Bloqueada · Hecha**.
 - **Drag & drop** entre columnas.
@@ -69,6 +76,13 @@ Formato: *Como usuario, quiero … para …*
 - Línea temporal con **zoom** año → medio año → mes → semana → día.
 - Barras para épicas (contenedoras) y sus tareas/subtareas, que **se agrupan/expanden** según la escala.
 - Edición de fechas arrastrando barras *(deseable; ver Roadmap)*.
+
+### 3.4b. Backlog
+- Lista **completa** de las tareas del proyecto: planificadas y sin planificar, dentro y fuera de la ventana del Kanban.
+- Es la única vista que **no esconde nada**: el sitio donde aparcar lo que aún no tiene *cuándo* y recuperar lo que se salió del radar.
+- **Filtros** por estado, por fecha (sin planificar · planificadas · en la ventana · vencidas, más un rango libre desde/hasta) y por **épica**.
+- Las épicas no son filas: contienen trabajo, no se ejecutan — son la dimensión del filtro (igual que en el Kanban).
+- Al pulsar una fila se abre el detalle de siempre: desde ahí se le ponen fechas y entra al Gantt (y, si toca, al Kanban).
 
 ### 3.5. Cronometraje
 - Registro **automático** del tiempo en "En curso" (sin cronómetro manual).

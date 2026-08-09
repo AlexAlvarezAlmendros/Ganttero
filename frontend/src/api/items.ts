@@ -2,11 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiSend } from "./client.js";
 import type { Item, ItemStatus, ItemType } from "./types.js";
 
-export function useItems(projectId: number | null) {
+/** Proyecto activo: un id, o `"all"` para la vista de todos los proyectos. */
+export type ProjectScope = number | "all";
+
+export function useItems(scope: ProjectScope | null) {
 	return useQuery({
-		queryKey: ["items", projectId],
-		queryFn: () => apiGet<Item[]>(`/projects/${projectId}/items`),
-		enabled: projectId !== null,
+		queryKey: ["items", scope],
+		queryFn: () =>
+			apiGet<Item[]>(scope === "all" ? "/items" : `/projects/${scope}/items`),
+		enabled: scope !== null,
 	});
 }
 
@@ -26,9 +30,11 @@ export function useCreateItem() {
 	return useMutation({
 		mutationFn: (data: CreateItemInput) =>
 			apiSend<Item>("POST", "/items", data),
-		onSuccess: (item) => {
-			queryClient.invalidateQueries({ queryKey: ["items", item.project_id] });
-			queryClient.invalidateQueries({ queryKey: ["kanban", item.project_id] });
+		onSuccess: () => {
+			// Prefijo, sin el id: el mismo ítem vive en la caché de su proyecto
+			// y en la de "todos los proyectos".
+			queryClient.invalidateQueries({ queryKey: ["items"] });
+			queryClient.invalidateQueries({ queryKey: ["kanban"] });
 		},
 	});
 }
@@ -50,8 +56,8 @@ export function useUpdateItem() {
 		mutationFn: ({ id, ...patch }: UpdateItemInput) =>
 			apiSend<Item>("PATCH", `/items/${id}`, patch),
 		onSuccess: (item) => {
-			queryClient.invalidateQueries({ queryKey: ["items", item.project_id] });
-			queryClient.invalidateQueries({ queryKey: ["kanban", item.project_id] });
+			queryClient.invalidateQueries({ queryKey: ["items"] });
+			queryClient.invalidateQueries({ queryKey: ["kanban"] });
 			queryClient.invalidateQueries({ queryKey: ["timelog", item.id] });
 		},
 	});
@@ -76,13 +82,9 @@ export function useDeleteItem() {
 	return useMutation({
 		mutationFn: ({ id }: { id: number; project_id: number }) =>
 			apiSend<void>("DELETE", `/items/${id}`),
-		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({
-				queryKey: ["items", variables.project_id],
-			});
-			queryClient.invalidateQueries({
-				queryKey: ["kanban", variables.project_id],
-			});
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["items"] });
+			queryClient.invalidateQueries({ queryKey: ["kanban"] });
 		},
 	});
 }

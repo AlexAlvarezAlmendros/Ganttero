@@ -10,6 +10,7 @@ import { useLogout, useSession } from "./api/auth.js";
 import { useGithubLinks, useLinkRepo, useUnlinkRepo } from "./api/github.js";
 import { useHealth } from "./api/health.js";
 import {
+	type ProjectScope,
 	useCreateItem,
 	useDeleteItem,
 	useItems,
@@ -24,6 +25,7 @@ import {
 } from "./api/projects.js";
 import { useSettings } from "./api/settings.js";
 import type { Item, ItemStatus, Project } from "./api/types.js";
+import { BacklogView } from "./components/BacklogView.js";
 import { GanttView } from "./components/GanttView.js";
 import { ItemDialog } from "./components/ItemDialog.js";
 import type { ItemDialogInitial } from "./components/ItemDialog.js";
@@ -44,12 +46,14 @@ import { AjustesPage } from "./pages/AjustesPage.js";
 const NAV = [
 	{ id: "kanban", label: "KANBAN" },
 	{ id: "gantt", label: "GANTT" },
+	{ id: "backlog", label: "BACKLOG" },
 	{ id: "ajustes", label: "AJUSTES" },
 ];
 
 const TITLES: Record<string, string> = {
 	kanban: "KANBAN",
 	gantt: "GANTT",
+	backlog: "BACKLOG",
 	ajustes: "AJUSTES",
 };
 
@@ -76,7 +80,8 @@ export function App() {
 
 	const [toast, setToast] = useState<string | null>(null);
 	const [authWarningSeen, setAuthWarningSeen] = useState(false);
-	const [projectId, setProjectId] = useState<number | null>(null);
+	// Ámbito activo: un proyecto concreto o "all" (todos a la vez).
+	const [scope, setScope] = useState<ProjectScope | null>(null);
 	const [projectEdit, setProjectEdit] = useState<Project | null | "new">(null);
 	const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 	const [openTask, setOpenTask] = useState<Item | null>(null);
@@ -94,13 +99,20 @@ export function App() {
 	const session = useSession();
 	const logout = useLogout();
 	const projects = useProjects();
+	const allProjects = scope === "all";
+	/** Proyecto concreto en foco; `null` en la vista de todos los proyectos. */
 	const active = useMemo(() => {
 		const list = projects.data ?? [];
-		return list.find((project) => project.id === projectId) ?? list[0] ?? null;
-	}, [projects.data, projectId]);
-	const items = useItems(active?.id ?? null);
-	const kanban = useKanban(active?.id ?? null);
+		if (scope === "all") return null;
+		return list.find((project) => project.id === scope) ?? list[0] ?? null;
+	}, [projects.data, scope]);
+	const dataScope: ProjectScope | null = allProjects
+		? "all"
+		: (active?.id ?? null);
+	const items = useItems(dataScope);
+	const kanban = useKanban(dataScope);
 	const settings = useSettings();
+	// GitHub se enlaza a UN proyecto: en la vista de todos no aplica.
 	const githubLinks = useGithubLinks(active?.id ?? null);
 	const linkRepo = useLinkRepo();
 	const unlinkRepo = useUnlinkRepo();
@@ -122,7 +134,7 @@ export function App() {
 	// El botón "+ NUEVA TAREA" abre el formulario manual directamente; la voz
 	// pasa a ser un botón dentro del propio formulario.
 	const openCreate = () => {
-		if (!active) return;
+		if (!active && !allProjects) return;
 		setVoicePrefill(null);
 		setCreatingItem(true);
 	};
@@ -130,7 +142,7 @@ export function App() {
 	// Atajo de captura rápida por voz (icono del TopBar): abre la grabación;
 	// al terminar, el formulario se abre pre-relleno.
 	const openVoice = () => {
-		if (!active) return;
+		if (!active && !allProjects) return;
 		setCapturingVoice(true);
 	};
 
@@ -201,7 +213,8 @@ export function App() {
 					<ProjectSelector
 						projects={projects.data ?? []}
 						active={active}
-						onSelect={setProjectId}
+						scope={scope}
+						onSelect={setScope}
 						onNew={() => setProjectEdit("new")}
 						onEdit={setProjectEdit}
 						onDelete={setProjectToDelete}
@@ -220,7 +233,7 @@ export function App() {
 				<Button
 					variant="ghost"
 					size="sm"
-					disabled={!active}
+					disabled={!active && !allProjects}
 					onClick={openCreate}
 				>
 					+ NUEVA TAREA
@@ -244,6 +257,7 @@ export function App() {
 						element={
 							<GanttView
 								items={items.data ?? []}
+								{...(allProjects ? { projects: projects.data ?? [] } : {})}
 								today={today}
 								onOpen={setOpenTask}
 								onMove={(item, days) =>
@@ -266,6 +280,19 @@ export function App() {
 										},
 									)
 								}
+							/>
+						}
+					/>
+					<Route
+						path="/backlog"
+						element={
+							<BacklogView
+								items={items.data ?? []}
+								projects={projects.data ?? []}
+								showProject={allProjects}
+								today={today}
+								windowDays={settings.data?.kanban_window_days ?? 14}
+								onOpen={setOpenTask}
 							/>
 						}
 					/>
@@ -329,10 +356,11 @@ export function App() {
 					}
 				/>
 			)}
-			{creatingItem && active && (
+			{creatingItem && (active || allProjects) && (
 				<ItemDialog
 					key={captureNonce}
-					projectId={active.id}
+					projectId={active?.id ?? null}
+					projects={projects.data ?? []}
 					items={items.data ?? []}
 					onRecordVoice={() => setCapturingVoice(true)}
 					{...(voicePrefill
@@ -421,7 +449,7 @@ export function App() {
 						} else {
 							createProject.mutate(data, {
 								onSuccess: (project) => {
-									setProjectId(project.id);
+									setScope(project.id);
 									syncRepo(project.id);
 									setToast(`${project.name} creado · planifica en el gantt`);
 									setProjectEdit(null);
