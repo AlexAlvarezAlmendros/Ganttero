@@ -52,7 +52,13 @@ export function TaskDetail({
 	const timelog = useTimelog(task.id);
 	const commits = useItemCommits(task.id);
 	const improve = useImproveDescription();
-	const parents = parentCandidates(items, task.type, task.id);
+	// En la vista de todos los proyectos llegan ítems de varios: un padre solo
+	// vale dentro del mismo proyecto (el backend lo rechazaría igualmente).
+	const parents = parentCandidates(
+		items.filter((item) => item.project_id === task.project_id),
+		task.type,
+		task.id,
+	);
 
 	return (
 		<Dialog

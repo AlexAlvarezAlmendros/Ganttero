@@ -47,6 +47,68 @@ function renderBacklog(onOpen = vi.fn()) {
 	return onOpen;
 }
 
+describe("BacklogView — todos los proyectos", () => {
+	afterEach(cleanup);
+
+	const projects = [
+		{
+			id: 1,
+			name: "Ganttero",
+			key_prefix: "GP",
+			description: null,
+			created_at: "2026-08-01T00:00:00.000Z",
+			archived_at: null,
+		},
+		{
+			id: 2,
+			name: "Otro",
+			key_prefix: "OT",
+			description: null,
+			created_at: "2026-08-01T00:00:00.000Z",
+			archived_at: null,
+		},
+	];
+	const mixed: Item[] = [
+		...items,
+		makeItem(5, "task", {
+			project_id: 2,
+			key: "OT-1",
+			title: "tarea del otro",
+		}),
+	];
+
+	function renderAll() {
+		render(
+			<BacklogView
+				items={mixed}
+				projects={projects}
+				showProject
+				today={TODAY}
+				windowDays={14}
+				onOpen={vi.fn()}
+			/>,
+		);
+	}
+
+	it("lista el trabajo de todos los proyectos con su columna PROYECTO", () => {
+		renderAll();
+		expect(screen.getByText("TAREAS DE TODOS LOS PROYECTOS")).toBeDefined();
+		expect(screen.getByText("tarea del otro")).toBeDefined();
+		expect(screen.getByText("Montar el RAID")).toBeDefined();
+		expect(screen.getByText("Otro")).toBeDefined();
+	});
+
+	it("el filtro de proyecto acota la lista", () => {
+		renderAll();
+		fireEvent.change(screen.getByLabelText("Proyecto"), {
+			target: { value: "2" },
+		});
+		expect(screen.getByText("tarea del otro")).toBeDefined();
+		expect(screen.queryByText("Montar el RAID")).toBeNull();
+		expect(screen.getByText("1 de 4")).toBeDefined();
+	});
+});
+
 describe("BacklogView", () => {
 	afterEach(cleanup);
 
@@ -118,6 +180,12 @@ describe("BacklogView", () => {
 			target: { value: "overdue" },
 		});
 		expect(screen.getByText("// ninguna tarea pasa los filtros")).toBeDefined();
+	});
+
+	it("sin showProject no hay ni columna ni filtro de proyecto", () => {
+		renderBacklog();
+		expect(screen.queryByLabelText("Proyecto")).toBeNull();
+		expect(screen.getByText("TAREAS DEL PROYECTO")).toBeDefined();
 	});
 
 	it("abre el detalle al hacer clic en una fila", () => {

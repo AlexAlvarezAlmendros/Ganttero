@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "./client.js";
+import type { ProjectScope } from "./items.js";
 import type { Item, ItemStatus } from "./types.js";
 
 export type DerivedPriority = "late" | "now" | "normal" | "blocked" | "done";
@@ -9,7 +10,8 @@ export interface KanbanCard extends Item {
 }
 
 export interface KanbanBoardData {
-	project_id: number;
+	/** `null` = tablero de todos los proyectos. */
+	project_id: number | null;
 	today: string;
 	window_days: number;
 	columns: Record<ItemStatus, KanbanCard[]>;
@@ -20,11 +22,14 @@ export interface KanbanBoardData {
  * es innecesario: el backend deriva por petición y aquí revalidamos cada
  * minuto y al volver el foco.
  */
-export function useKanban(projectId: number | null) {
+export function useKanban(scope: ProjectScope | null) {
 	return useQuery({
-		queryKey: ["kanban", projectId],
-		queryFn: () => apiGet<KanbanBoardData>(`/projects/${projectId}/kanban`),
-		enabled: projectId !== null,
+		queryKey: ["kanban", scope],
+		queryFn: () =>
+			apiGet<KanbanBoardData>(
+				scope === "all" ? "/kanban" : `/projects/${scope}/kanban`,
+			),
+		enabled: scope !== null,
 		refetchInterval: 60_000,
 		refetchOnWindowFocus: true,
 	});

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Item, ItemStatus } from "../api/types.js";
+import type { Item, ItemStatus, Project } from "../api/types.js";
 import {
 	type BacklogFilters,
 	DATE_FILTERS,
@@ -40,11 +40,17 @@ const cell: React.CSSProperties = {
  */
 export function BacklogView({
 	items,
+	projects = [],
+	showProject = false,
 	today,
 	windowDays,
 	onOpen,
 }: {
 	items: Item[];
+	/** Proyectos del ámbito; solo se usan en la vista de todos los proyectos. */
+	projects?: Project[];
+	/** Añade la columna y el filtro PROYECTO (vista de todos los proyectos). */
+	showProject?: boolean;
 	/** "Hoy" inyectado desde App (nunca se calcula aquí). */
 	today: string;
 	windowDays: number;
@@ -55,6 +61,10 @@ export function BacklogView({
 		setFilters((current) => ({ ...current, ...change }));
 
 	const epics = useMemo(() => epicsOf(items), [items]);
+	const projectsById = useMemo(
+		() => new Map(projects.map((project) => [project.id, project])),
+		[projects],
+	);
 	const byId = useMemo(
 		() => new Map(items.map((item) => [item.id, item])),
 		[items],
@@ -70,13 +80,31 @@ export function BacklogView({
 			<div
 				style={{
 					display: "grid",
-					gridTemplateColumns: "1fr 1fr 1.4fr 1fr 1fr auto",
+					gridTemplateColumns: showProject
+						? "1fr 1fr 1fr 1.4fr 1fr 1fr auto"
+						: "1fr 1fr 1.4fr 1fr 1fr auto",
 					gap: 10,
 					alignItems: "end",
 					border: "1px solid var(--border-1)",
 					padding: "12px 14px",
 				}}
 			>
+				{showProject && (
+					<Select
+						label="Proyecto"
+						value={String(filters.project)}
+						onChange={(value) =>
+							patch({ project: value === "all" ? "all" : Number(value) })
+						}
+						options={[
+							{ value: "all", label: "TODOS" },
+							...projects.map((project) => ({
+								value: String(project.id),
+								label: `${project.key_prefix} · ${project.name}`,
+							})),
+						]}
+					/>
+				)}
 				<Select
 					label="Estado"
 					value={filters.status}
@@ -138,7 +166,11 @@ export function BacklogView({
 					alignItems: "center",
 				}}
 			>
-				<MicroLabel>TAREAS DEL PROYECTO</MicroLabel>
+				<MicroLabel>
+					{showProject
+						? "TAREAS DE TODOS LOS PROYECTOS"
+						: "TAREAS DEL PROYECTO"}
+				</MicroLabel>
 				<span
 					style={{
 						fontFamily: "var(--font-mono)",
@@ -164,7 +196,9 @@ export function BacklogView({
 							onClick={() => onOpen(item)}
 							style={{
 								display: "grid",
-								gridTemplateColumns: "70px 1fr 150px 110px 150px 70px",
+								gridTemplateColumns: showProject
+									? "70px 1fr 120px 150px 110px 150px 70px"
+									: "70px 1fr 150px 110px 150px 70px",
 								gap: 10,
 								alignItems: "center",
 								width: "100%",
@@ -192,6 +226,11 @@ export function BacklogView({
 								{item.type === "subtask" ? "↳ " : ""}
 								{item.title}
 							</span>
+							{showProject && (
+								<span style={{ ...cell, color: "var(--ink-4)" }}>
+									{projectsById.get(item.project_id)?.name ?? "—"}
+								</span>
+							)}
 							<span style={{ ...cell, color: "var(--ink-4)" }}>
 								{epic ? epic.key : "— sin épica —"}
 							</span>
@@ -219,7 +258,9 @@ export function BacklogView({
 						}}
 					>
 						{total === 0
-							? "// este proyecto aún no tiene tareas"
+							? showProject
+								? "// aún no hay tareas en ningún proyecto"
+								: "// este proyecto aún no tiene tareas"
 							: "// ninguna tarea pasa los filtros"}
 					</div>
 				)}

@@ -9,6 +9,13 @@ import type { ItemsService } from "./items.service.js";
 
 export function itemsRoutes(service: ItemsService) {
 	return async function routes(app: FastifyInstance): Promise<void> {
+		/** Todos los proyectos a la vez. Debe declararse antes que /items/:id
+		 * no por el enrutador (Fastify prioriza la estática), sino para leerse
+		 * junto a su hermana por proyecto. */
+		app.get("/items", async () => {
+			return service.listAll();
+		});
+
 		app.get("/projects/:id/items", async (request) => {
 			const { id } = idParamSchema.parse(request.params);
 			return service.listByProject(id);

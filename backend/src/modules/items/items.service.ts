@@ -48,6 +48,11 @@ export class ItemsService {
 		}
 	}
 
+	/** Vista "TODOS LOS PROYECTOS": el trabajo entero, sin filtrar por proyecto. */
+	async listAll(): Promise<Item[]> {
+		return this.repo.listAll();
+	}
+
 	async listByProject(projectId: number): Promise<Item[]> {
 		const project = await this.projectsRepo.getById(projectId);
 		if (!project) {

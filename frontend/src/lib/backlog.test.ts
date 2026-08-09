@@ -145,6 +145,40 @@ describe("filterBacklog — filtros combinados", () => {
 	});
 });
 
+describe("filterBacklog — vista de todos los proyectos", () => {
+	// Mismo conjunto, más una tarea de otro proyecto.
+	const mixed: Item[] = [
+		...items,
+		makeItem(30, "task", { project_id: 2, key: "OT-1", title: "del otro" }),
+	];
+
+	it("sin filtro de proyecto entra el trabajo de todos", () => {
+		const result = filterBacklog(mixed, NO_FILTERS, TODAY, WINDOW);
+		expect(result.map((item) => item.id)).toContain(30);
+		expect(result).toHaveLength(7);
+	});
+
+	it("el filtro de proyecto deja solo el suyo", () => {
+		const result = filterBacklog(
+			mixed,
+			{ ...NO_FILTERS, project: 2 },
+			TODAY,
+			WINDOW,
+		);
+		expect(result.map((item) => item.id)).toEqual([30]);
+	});
+
+	it("se combina con los demás filtros", () => {
+		const result = filterBacklog(
+			mixed,
+			{ ...NO_FILTERS, project: 1, date: "overdue" },
+			TODAY,
+			WINDOW,
+		);
+		expect(result.map((item) => item.id)).toEqual([4]);
+	});
+});
+
 describe("epicIdOf / epicsOf / hasActiveFilters", () => {
 	const byId = new Map(items.map((item) => [item.id, item]));
 
@@ -170,6 +204,7 @@ describe("epicIdOf / epicsOf / hasActiveFilters", () => {
 
 	it("detecta si hay algún filtro puesto", () => {
 		expect(hasActiveFilters(NO_FILTERS)).toBe(false);
+		expect(hasActiveFilters({ ...NO_FILTERS, project: 2 })).toBe(true);
 		expect(hasActiveFilters({ ...NO_FILTERS, status: "done" })).toBe(true);
 		expect(hasActiveFilters({ ...NO_FILTERS, from: "2026-08-01" })).toBe(true);
 	});

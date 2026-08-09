@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { Item } from "../api/types.js";
+import type { Item, Project } from "../api/types.js";
 import {
 	SCALES,
 	addDays,
@@ -32,11 +32,14 @@ function barColor(item: Item): { background: string; opacity?: number } {
  */
 export function GanttView({
 	items,
+	projects,
 	today,
 	onOpen,
 	onMove,
 }: {
 	items: Item[];
+	/** Presente solo en la vista de todos los proyectos: etiqueta cada raíz. */
+	projects?: Project[];
 	today: string;
 	onOpen: (item: Item) => void;
 	onMove: (item: Item, days: number) => void;
@@ -49,6 +52,12 @@ export function GanttView({
 	const range = scaleRange(scale, today);
 	const totalDays = daysBetween(range.start, range.end) + 1;
 	const rows = buildRows(items, scale);
+	const projectsById = new Map((projects ?? []).map((p) => [p.id, p]));
+	/** En la vista de todos los proyectos, cada raíz dice de quién es. */
+	const projectTag = (item: Item, depth: number) =>
+		projects && depth === 0
+			? (projectsById.get(item.project_id)?.name ?? null)
+			: null;
 	const ticks = headerTicks(scale, range);
 	const todayPct = pct(range, today);
 
@@ -220,6 +229,18 @@ export function GanttView({
 											▸
 										</span>
 										{item.title}
+										{projectTag(item, depth) && (
+											<span
+												style={{
+													fontWeight: 400,
+													fontSize: 9.5,
+													color: "var(--ink-5)",
+													marginLeft: 8,
+												}}
+											>
+												{projectTag(item, depth)}
+											</span>
+										)}
 									</span>
 								) : (
 									<span
@@ -238,6 +259,11 @@ export function GanttView({
 											style={{ fontSize: 10 }}
 										/>
 										{item.title}
+										{projectTag(item, depth) && (
+											<span style={{ fontSize: 9.5, color: "var(--ink-5)" }}>
+												{projectTag(item, depth)}
+											</span>
+										)}
 									</span>
 								)}
 							</div>

@@ -4,6 +4,11 @@ import type { KanbanService } from "./kanban.service.js";
 
 export function kanbanRoutes(service: KanbanService) {
 	return async function routes(app: FastifyInstance): Promise<void> {
+		/** Tablero de TODOS los proyectos (project_id: null en la respuesta). */
+		app.get("/kanban", async () => {
+			return service.boardAll();
+		});
+
 		/** El tablero se deriva en cada petición: siempre fresco, nada persistido. */
 		app.get("/projects/:id/kanban", async (request) => {
 			const { id } = idParamSchema.parse(request.params);
