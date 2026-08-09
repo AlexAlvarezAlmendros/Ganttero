@@ -70,6 +70,13 @@ Formato: *Como usuario, quiero … para …*
 - Barras para épicas (contenedoras) y sus tareas/subtareas, que **se agrupan/expanden** según la escala.
 - Edición de fechas arrastrando barras *(deseable; ver Roadmap)*.
 
+### 3.4b. Backlog
+- Lista **completa** de las tareas del proyecto: planificadas y sin planificar, dentro y fuera de la ventana del Kanban.
+- Es la única vista que **no esconde nada**: el sitio donde aparcar lo que aún no tiene *cuándo* y recuperar lo que se salió del radar.
+- **Filtros** por estado, por fecha (sin planificar · planificadas · en la ventana · vencidas, más un rango libre desde/hasta) y por **épica**.
+- Las épicas no son filas: contienen trabajo, no se ejecutan — son la dimensión del filtro (igual que en el Kanban).
+- Al pulsar una fila se abre el detalle de siempre: desde ahí se le ponen fechas y entra al Gantt (y, si toca, al Kanban).
+
 ### 3.5. Cronometraje
 - Registro **automático** del tiempo en "En curso" (sin cronómetro manual).
 - Historial de tiempo por tarea; base para comparar real vs. estimado *(extensión futura)*.
