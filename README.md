@@ -40,8 +40,12 @@ Para la captura por voz en dev: venv de faster-whisper + ffmpeg
 
 ```bash
 cp backend/.env.example .env   # editar OLLAMA_BASE_URL, GITHUB_TOKEN, GANTTERO_DATA_DIR
+pnpm --filter backend auth:hash # genera AUTH_PASSWORD_HASH y AUTH_SECRET para el .env
 docker compose up -d --build   # app en http://<homeserver>:8080
 ```
+
+La app pide usuario y contraseña (un solo usuario, credenciales en el `.env`); la sesión
+vive en una cookie `HttpOnly` firmada. En producción el backend no arranca sin ellas.
 
 Detalles, backups y observabilidad en [docs/deploy.md](docs/deploy.md).
 

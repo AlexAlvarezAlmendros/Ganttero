@@ -30,6 +30,29 @@ GANTTERO_DATA_DIR=/mnt/nas/ganttero         # ruta montada del NAS
 > El fichero de la DB y los audios viven en `GANTTERO_DATA_DIR` (el NAS).
 > `DATABASE_URL`, `AUDIO_DIR` y las rutas del STT ya vienen fijadas en el compose.
 
+### Credenciales (obligatorias en producción)
+
+Genera el hash de la contraseña y el secreto de sesión (la contraseña se pide por
+teclado; no queda en el historial del shell):
+
+```bash
+pnpm --filter backend auth:hash
+```
+
+Pega su salida en el `.env` y añade el usuario:
+
+```bash
+AUTH_USERNAME=poio
+AUTH_PASSWORD_HASH=scrypt$16384$8$1$...
+AUTH_SECRET=<64 hex>
+AUTH_SESSION_DAYS=30      # duración de la sesión
+AUTH_COOKIE_SECURE=false  # `true` solo si sirves la app por HTTPS
+```
+
+> Con `NODE_ENV=production` el backend **no arranca** sin las tres primeras: así
+> nunca se despliega con la API abierta. Cambiar la contraseña = regenerar el
+> hash y reiniciar el backend. Rotar `AUTH_SECRET` cierra todas las sesiones.
+
 ## 2. Arrancar
 
 ```bash

@@ -1,6 +1,6 @@
 # Ganttero — Roadmap del proyecto
 
-> Última actualización: 2026-07-24
+> Última actualización: 2026-08-09
 
 App web *self-hosted* de planificación personal: **Kanban + Gantt multi-escala**, captura de tareas por **voz** con IA local (Whisper + Gemma 4) y **automatización Gantt→Kanban**. Un solo usuario, todo en el homeserver, datos en el NAS; el único punto en la nube es la API de GitHub.
 
@@ -23,10 +23,13 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 6 | Integración GitHub | ✅ Hecho | [06-github.md](plans/06-github.md) | Un commit con `GP-<id>` se refleja en la tarea |
 | 7 | Pulido y despliegue estable | ✅ Hecho | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
 | 8 | Descripciones markdown + IA | ✅ Hecho | [08-descripciones-markdown.md](plans/08-descripciones-markdown.md) | Editor WYSIWYG (markdown por debajo) con botón "mejorar formato" (Gemma local) |
+| 9 | Autenticación básica | ✅ Hecho | [09-autenticacion.md](plans/09-autenticacion.md) | La app pide usuario/contraseña una vez y ninguna ruta de datos responde sin sesión |
 
 ## Foco actual
 
-**Proyecto implementado (Fases 0–7 ✅).** Pendientes de operación (no de código): mergear la cadena de PRs, primer `docker compose up --build` en el homeserver ([docs/deploy.md](../deploy.md)), cron de backups, e investigar el overhead de ~20 s de Ollama por petición en el homeserver (la generación real son ~4 s).
+**Fases 0–9 implementadas.** La Fase 9 añadió el login de un solo usuario dentro del backend Fastify (sin servicio de auth aparte, modelo Umami): credenciales en `.env` con hash scrypt, sesión en cookie firmada `HttpOnly` y rate limit por IP.
+
+Pendientes de operación (no de código): primer `docker compose up --build` en el homeserver ([docs/deploy.md](../deploy.md)), cron de backups, e investigar el overhead de ~20 s de Ollama por petición en el homeserver (la generación real son ~4 s).
 
 ## Grafo de dependencias
 
@@ -61,4 +64,5 @@ Fase 1 (datos + API + esqueleto)
 - 2026-07-23 — **GO de la Fase 0.** Pipeline confirmado: faster-whisper `small` (CPU) + Gemma 4 vía Ollama con structured output + Zod + reintento. Fiabilidad 5/5 (100 %) en portátil (e4b) y homeserver (E2B con prompt endurecido); fechas relativas y estimaciones validadas. Latencia: ~28 s/captura contra el homeserver, con ~20 s de overhead interno de Ollama a investigar (cómputo real ~4 s → objetivo ~8 s). El overhead no bloquea la Fase 1.
 - 2026-07-24 — **Smart commits por POLLING, no webhook** (cierra la decisión abierta de architecture.md §8): nada de la LAN se expone a Internet; la latencia del intervalo (5 min por defecto) es irrelevante para un solo usuario. `GITHUB_POLL_SECONDS=0` lo apaga.
 - 2026-07-23 — **Gantt a medida** (cierra la decisión abierta de architecture.md §8): ninguna librería reproduce la estética del design system y el GanttView del kit ya define el enfoque (filas + barras posicionadas en %). Redibujar 5 escalas con agrupación es más simple sin pelearse con una librería.
+- 2026-08-09 — **Autenticación dentro del backend existente** (modelo Umami: sin servicio de auth aparte). Credenciales del único usuario en `.env` con hash **scrypt** (no en la DB), sesión en **cookie firmada `HttpOnly`** con HMAC-SHA256 de `node:crypto` (sin JWT), rate limit con backoff por IP y **sin 2FA**. En `production` el arranque falla si faltan las variables `AUTH_*`.
 - 2026-07-23 — La IA de producción apuntará al **Ollama del homeserver** (`gemma4:latest`, E2B en VRAM); el prompt vive en el código (`structure.ts`) con «hoy» siempre inyectado.
