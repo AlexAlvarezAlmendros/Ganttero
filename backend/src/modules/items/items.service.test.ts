@@ -143,6 +143,98 @@ describe("ItemsService.update", () => {
 		);
 	});
 
+	it("mueve una tarea de una épica a otra", async () => {
+		const task = makeItem({ id: 2, type: "task", parent_id: 1 });
+		const moved = makeItem({ id: 2, type: "task", parent_id: 5 });
+		const getById = vi.fn(async (id: number) => {
+			if (id === 2) return task;
+			if (id === 5) return makeItem({ id: 5, type: "epic" });
+			return null;
+		});
+		const update = vi.fn().mockResolvedValue(moved);
+		const service = new ItemsService(
+			mockItemsRepo({ getById, update }),
+			mockProjectsRepo(),
+			fixedNow,
+		);
+
+		await expect(service.update(2, { parent_id: 5 })).resolves.toEqual(moved);
+		expect(update).toHaveBeenCalledWith(
+			2,
+			{ parent_id: 5 },
+			"2026-07-23T10:00:00.000Z",
+		);
+	});
+
+	it("saca una tarea de su épica (parent_id: null)", async () => {
+		const task = makeItem({ id: 2, type: "task", parent_id: 1 });
+		const update = vi
+			.fn()
+			.mockResolvedValue(makeItem({ id: 2, parent_id: null }));
+		const service = new ItemsService(
+			mockItemsRepo({ getById: vi.fn().mockResolvedValue(task), update }),
+			mockProjectsRepo(),
+			fixedNow,
+		);
+
+		await service.update(2, { parent_id: null });
+		expect(update).toHaveBeenCalledWith(
+			2,
+			{ parent_id: null },
+			"2026-07-23T10:00:00.000Z",
+		);
+	});
+
+	it("rechaza un padre de otro proyecto", async () => {
+		const task = makeItem({ id: 2, type: "task", parent_id: 1 });
+		const getById = vi.fn(async (id: number) => {
+			if (id === 2) return task;
+			if (id === 9) return makeItem({ id: 9, type: "epic", project_id: 2 });
+			return null;
+		});
+		const service = new ItemsService(
+			mockItemsRepo({ getById }),
+			mockProjectsRepo(),
+			fixedNow,
+		);
+
+		await expect(service.update(2, { parent_id: 9 })).rejects.toThrow(
+			/mismo proyecto/,
+		);
+	});
+
+	it("rechaza colgar una subtarea directamente de una épica", async () => {
+		const subtask = makeItem({ id: 3, type: "subtask", parent_id: 2 });
+		const getById = vi.fn(async (id: number) => {
+			if (id === 3) return subtask;
+			if (id === 1) return makeItem({ id: 1, type: "epic" });
+			return null;
+		});
+		const service = new ItemsService(
+			mockItemsRepo({ getById }),
+			mockProjectsRepo(),
+			fixedNow,
+		);
+
+		await expect(service.update(3, { parent_id: 1 })).rejects.toThrow(
+			DomainError,
+		);
+	});
+
+	it("rechaza un padre inexistente", async () => {
+		const task = makeItem({ id: 2, type: "task", parent_id: 1 });
+		const getById = vi.fn(async (id: number) => (id === 2 ? task : null));
+		const service = new ItemsService(
+			mockItemsRepo({ getById }),
+			mockProjectsRepo(),
+			fixedNow,
+		);
+
+		await expect(service.update(2, { parent_id: 99 })).rejects.toThrow(
+			NotFoundError,
+		);
+	});
+
 	it("dispara el gancho onStatusChange solo cuando cambia el estado", async () => {
 		const current = makeItem({ status: "backlog" });
 		const updated = makeItem({ status: "in_progress" });

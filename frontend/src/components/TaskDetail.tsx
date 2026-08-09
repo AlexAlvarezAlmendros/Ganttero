@@ -4,6 +4,7 @@ import { useImproveDescription } from "../api/items.js";
 import { useTimelog } from "../api/timelogs.js";
 import type { Item, ItemStatus } from "../api/types.js";
 import { formatDuration } from "../lib/format.js";
+import { parentCandidates, parentFieldLabel } from "../lib/hierarchy.js";
 import { Button } from "./ds/Button.js";
 import { Dialog } from "./ds/Dialog.js";
 import { Input } from "./ds/Input.js";
@@ -14,12 +15,15 @@ import { StatusBadge } from "./ds/StatusBadge.js";
 
 export function TaskDetail({
 	task,
+	items,
 	onClose,
 	onStatus,
 	onSave,
 	onDelete,
 }: {
 	task: Item;
+	/** Ítems del proyecto: candidatos a padre al reasignar la jerarquía. */
+	items: Item[];
 	onClose: () => void;
 	onStatus: (item: Item, status: ItemStatus) => void;
 	onSave: (
@@ -27,6 +31,7 @@ export function TaskDetail({
 		patch: {
 			title?: string;
 			description?: string | null;
+			parent_id?: number | null;
 			start_date?: string | null;
 			end_date?: string | null;
 			estimate_min?: number | null;
@@ -36,6 +41,9 @@ export function TaskDetail({
 }) {
 	const [title, setTitle] = useState(task.title);
 	const [description, setDescription] = useState(task.description ?? "");
+	const [parent, setParent] = useState(
+		task.parent_id !== null ? String(task.parent_id) : "",
+	);
 	const [start, setStart] = useState(task.start_date ?? "");
 	const [end, setEnd] = useState(task.end_date ?? "");
 	const [estimate, setEstimate] = useState(
@@ -44,6 +52,7 @@ export function TaskDetail({
 	const timelog = useTimelog(task.id);
 	const commits = useItemCommits(task.id);
 	const improve = useImproveDescription();
+	const parents = parentCandidates(items, task.type, task.id);
 
 	return (
 		<Dialog
@@ -65,11 +74,14 @@ export function TaskDetail({
 					</Button>
 					<Button
 						size="sm"
-						disabled={!title.trim()}
+						disabled={!title.trim() || (task.type === "subtask" && !parent)}
 						onClick={() =>
 							onSave(task, {
 								title: title.trim(),
 								description: description.trim() || null,
+								...(task.type === "epic"
+									? {}
+									: { parent_id: parent ? Number(parent) : null }),
 								start_date: start || null,
 								end_date: end || null,
 								estimate_min: estimate ? Number(estimate) : null,
@@ -125,6 +137,24 @@ export function TaskDetail({
 					/>
 					<Input label="Inicio" type="date" value={start} onChange={setStart} />
 					<Input label="Fin" type="date" value={end} onChange={setEnd} />
+					{task.type !== "epic" && (
+						<Select
+							label={parentFieldLabel(task.type)}
+							value={parent}
+							onChange={setParent}
+							style={{ gridColumn: "1 / -1" }}
+							options={[
+								{
+									value: "",
+									label: task.type === "subtask" ? "— elige —" : "— ninguna —",
+								},
+								...parents.map((candidate) => ({
+									value: String(candidate.id),
+									label: `${candidate.key} · ${candidate.title}`,
+								})),
+							]}
+						/>
+					)}
 				</div>
 				<div>
 					<MicroLabel style={{ marginBottom: 8 }}>

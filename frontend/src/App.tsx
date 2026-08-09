@@ -301,6 +301,7 @@ export function App() {
 			{openTask && (
 				<TaskDetail
 					task={openTask}
+					items={items.data ?? []}
 					onClose={() => setOpenTask(null)}
 					onStatus={handleStatus}
 					onSave={(item, patch) =>

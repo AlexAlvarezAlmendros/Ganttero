@@ -24,10 +24,13 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 7 | Pulido y despliegue estable | ✅ Hecho | [07-despliegue.md](plans/07-despliegue.md) | La app vive en el homeserver y se usa a diario |
 | 8 | Descripciones markdown + IA | ✅ Hecho | [08-descripciones-markdown.md](plans/08-descripciones-markdown.md) | Editor WYSIWYG (markdown por debajo) con botón "mejorar formato" (Gemma local) |
 | 9 | Autenticación básica | ✅ Hecho | [09-autenticacion.md](plans/09-autenticacion.md) | La app pide usuario/contraseña una vez y ninguna ruta de datos responde sin sesión |
+| 10 | Reasignar el padre de un ítem | ✅ Hecho | [10-reasignar-padre.md](plans/10-reasignar-padre.md) | Cambiar la épica de una tarea desde su detalle, sin borrar y recrear |
 
 ## Foco actual
 
-**Fases 0–9 implementadas.** La Fase 9 añadió el login de un solo usuario dentro del backend Fastify (sin servicio de auth aparte, modelo Umami): credenciales en `.env` con hash scrypt, sesión en cookie firmada `HttpOnly` y rate limit por IP.
+**Fases 0–10 implementadas.** La Fase 10 añadió el selector de padre en el detalle del ítem: el backend ya validaba el reparentado (mismo proyecto, jerarquía, sin ciclos), así que solo faltaba la UI y los tests.
+
+La Fase 9 añadió el login de un solo usuario dentro del backend Fastify (sin servicio de auth aparte, modelo Umami): credenciales en `.env` con hash scrypt, sesión en cookie firmada `HttpOnly` y rate limit por IP.
 
 Pendientes de operación (no de código): primer `docker compose up --build` en el homeserver ([docs/deploy.md](../deploy.md)), cron de backups, e investigar el overhead de ~20 s de Ollama por petición en el homeserver (la generación real son ~4 s).
 
