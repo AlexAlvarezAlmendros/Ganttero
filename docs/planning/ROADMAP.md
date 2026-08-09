@@ -25,6 +25,7 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 8 | Descripciones markdown + IA | ✅ Hecho | [08-descripciones-markdown.md](plans/08-descripciones-markdown.md) | Editor WYSIWYG (markdown por debajo) con botón "mejorar formato" (Gemma local) |
 | 9 | Autenticación básica | ✅ Hecho | [09-autenticacion.md](plans/09-autenticacion.md) | La app pide usuario/contraseña una vez y ninguna ruta de datos responde sin sesión |
 | 10 | Reasignar el padre de un ítem | ✅ Hecho | [10-reasignar-padre.md](plans/10-reasignar-padre.md) | Cambiar la épica de una tarea desde su detalle, sin borrar y recrear |
+| 11 | Pulido de UX | 🔄 En curso | [11-pulido-ux.md](plans/11-pulido-ux.md) | Cajón continuo: fricciones que salen usando la app a diario |
 
 ## Foco actual
 

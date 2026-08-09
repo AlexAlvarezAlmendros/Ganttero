@@ -22,14 +22,14 @@ export function Dialog({
 	return (
 		<div
 			className="gtr-dialog__scrim"
-			onClick={onClose}
 			onKeyDown={(event) => event.key === "Escape" && onClose()}
 			role="presentation"
 		>
+			{/* El clic en el scrim NO cierra: un formulario a medio rellenar no se
+			    pierde por un clic fuera. Se sale por ✕, por CANCELAR o con Escape. */}
 			<div
 				className="gtr-dialog"
 				style={style}
-				onClick={(event) => event.stopPropagation()}
 				role="dialog"
 				aria-label={title}
 			>
