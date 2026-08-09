@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type CreateItemInput, useImproveDescription } from "../api/items.js";
 import type { Item, ItemType } from "../api/types.js";
+import { parentCandidates, parentFieldLabel } from "../lib/hierarchy.js";
 import { Button } from "./ds/Button.js";
 import { Dialog } from "./ds/Dialog.js";
 import { Input } from "./ds/Input.js";
@@ -51,12 +52,7 @@ export function ItemDialog({
 		initial?.estimate_min != null ? String(initial.estimate_min) : "",
 	);
 
-	const parents =
-		type === "task"
-			? items.filter((item) => item.type === "epic")
-			: type === "subtask"
-				? items.filter((item) => item.type === "task")
-				: [];
+	const parents = parentCandidates(items, type);
 
 	return (
 		<Dialog
@@ -146,7 +142,7 @@ export function ItemDialog({
 						]}
 					/>
 					<Select
-						label={type === "subtask" ? "Tarea madre" : "Épica (opcional)"}
+						label={parentFieldLabel(type)}
 						value={parent}
 						onChange={setParent}
 						disabled={type === "epic"}
