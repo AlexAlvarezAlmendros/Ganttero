@@ -28,10 +28,13 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 11 | Pulido de UX | 🔄 En curso | [11-pulido-ux.md](plans/11-pulido-ux.md) | Cajón continuo: fricciones que salen usando la app a diario |
 | 12 | Backlog con filtros | ✅ Hecho | [12-backlog.md](plans/12-backlog.md) | Todas las tareas del proyecto en una vista, filtrables por estado, fecha y épica |
 | 13 | Vista "Todos los proyectos" | ✅ Hecho | [13-todos-los-proyectos.md](plans/13-todos-los-proyectos.md) | Kanban, Gantt y Backlog con el trabajo de todos los proyectos a la vez |
+| 14 | Servidor MCP para agentes de IA | ✅ Hecho | [14-mcp.md](plans/14-mcp.md) | Claude Code lee las tareas de cada proyecto y actualiza su estado conforme trabaja |
 
 ## Foco actual
 
-**Fases 0–10, 12 y 13 implementadas.** La Fase 13 añadió el ámbito TODOS LOS PROYECTOS al selector: endpoints agregados (`GET /items`, `GET /kanban`) que reutilizan la misma derivación, y las tres vistas respetando el ámbito.
+**Fases 0–10 y 12–14 implementadas.** La Fase 14 abrió Ganttero a los agentes de IA: un endpoint MCP (Streamable HTTP) dentro del backend, apagado salvo que exista `MCP_TOKEN`, con siete herramientas para leer y mover el trabajo.
+
+La Fase 13 añadió el ámbito TODOS LOS PROYECTOS al selector: endpoints agregados (`GET /items`, `GET /kanban`) que reutilizan la misma derivación, y las tres vistas respetando el ámbito.
 
 La Fase 12 tapó el agujero que dejaba la derivación del Kanban: un ítem sin fechas no aparecía en ninguna vista. Ahora `/backlog` lo lista todo, con filtros de estado, fecha y épica.
 
