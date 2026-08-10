@@ -29,10 +29,13 @@ Documentación: [funcional](../functional.md) · [arquitectura](../architecture.
 | 12 | Backlog con filtros | ✅ Hecho | [12-backlog.md](plans/12-backlog.md) | Todas las tareas del proyecto en una vista, filtrables por estado, fecha y épica |
 | 13 | Vista "Todos los proyectos" | ✅ Hecho | [13-todos-los-proyectos.md](plans/13-todos-los-proyectos.md) | Kanban, Gantt y Backlog con el trabajo de todos los proyectos a la vez |
 | 14 | Servidor MCP para agentes de IA | ✅ Hecho | [14-mcp.md](plans/14-mcp.md) | Claude Code lee las tareas de cada proyecto y actualiza su estado conforme trabaja |
+| 15 | Despliegue en Vercel + Turso | ✅ Hecho | [15-vercel-turso.md](plans/15-vercel-turso.md) | El mismo repo va al homeserver o a Vercel con Turso, y cada despliegue anuncia sus capacidades |
 
 ## Foco actual
 
-**Fases 0–10 y 12–14 implementadas.** La Fase 14 abrió Ganttero a los agentes de IA: un endpoint MCP (Streamable HTTP) dentro del backend, apagado salvo que exista `MCP_TOKEN`, con siete herramientas para leer y mover el trabajo.
+**Fases 0–10 y 12–15 implementadas.** La Fase 15 añadió un segundo destino de despliegue —Vercel con base de datos Turso— sin tocar el self-hosted: `GET /capabilities` dice qué ofrece cada uno y la UI esconde lo que no hay (la voz no viaja a serverless).
+
+La Fase 14 abrió Ganttero a los agentes de IA: un endpoint MCP (Streamable HTTP) dentro del backend, apagado salvo que exista `MCP_TOKEN`, con siete herramientas para leer y mover el trabajo.
 
 La Fase 13 añadió el ámbito TODOS LOS PROYECTOS al selector: endpoints agregados (`GET /items`, `GET /kanban`) que reutilizan la misma derivación, y las tres vistas respetando el ámbito.
 
@@ -78,4 +81,5 @@ Fase 1 (datos + API + esqueleto)
 - 2026-07-24 — **Smart commits por POLLING, no webhook** (cierra la decisión abierta de architecture.md §8): nada de la LAN se expone a Internet; la latencia del intervalo (5 min por defecto) es irrelevante para un solo usuario. `GITHUB_POLL_SECONDS=0` lo apaga.
 - 2026-07-23 — **Gantt a medida** (cierra la decisión abierta de architecture.md §8): ninguna librería reproduce la estética del design system y el GanttView del kit ya define el enfoque (filas + barras posicionadas en %). Redibujar 5 escalas con agrupación es más simple sin pelearse con una librería.
 - 2026-08-09 — **Autenticación dentro del backend existente** (modelo Umami: sin servicio de auth aparte). Credenciales del único usuario en `.env` con hash **scrypt** (no en la DB), sesión en **cookie firmada `HttpOnly`** con HMAC-SHA256 de `node:crypto` (sin JWT), rate limit con backoff por IP y **sin 2FA**. En `production` el arranque falla si faltan las variables `AUTH_*`.
+- 2026-08-09 — **Dos destinos de despliegue, no uno.** El self-hosted (Docker + NAS) sigue siendo el de referencia; Vercel + **Turso** se añade al lado. Vercel detecta un Fastify que llama a `listen()`, así que el arranque **no** se reescribe como handler serverless. Lo que no cabe en serverless (voz: Python + ffmpeg; polling de smart commits: proceso vivo) se apaga por variable y se anuncia en `GET /capabilities`, para que la UI esconda lo que no hay en vez de fallar.
 - 2026-07-23 — La IA de producción apuntará al **Ollama del homeserver** (`gemma4:latest`, E2B en VRAM); el prompt vive en el código (`structure.ts`) con «hoy» siempre inyectado.

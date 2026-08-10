@@ -13,8 +13,15 @@ const envSchema = z.object({
 		.default("development"),
 	HOST: z.string().min(1).default("0.0.0.0"),
 	PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-	/** URL libSQL: `file:...` (fichero, en prod montado desde el NAS) o `ws://host:8080` (sqld). */
+	/**
+	 * URL libSQL. Tres formas, según dónde viva la app:
+	 *   `file:...`      → fichero local o montado del NAS (self-hosted)
+	 *   `ws://host:8080`→ sqld self-hosted
+	 *   `libsql://...`  → Turso gestionado (Vercel); exige DATABASE_AUTH_TOKEN
+	 */
 	DATABASE_URL: z.string().min(1).default("file:./data/ganttero.db"),
+	/** Token de Turso. Obligatorio con `libsql://`. Nunca loggearlo. */
+	DATABASE_AUTH_TOKEN: z.string().min(1).optional(),
 	/** Ollama del homeserver para la captura por voz (Fase 5). */
 	OLLAMA_BASE_URL: z
 		.string()
@@ -27,6 +34,15 @@ const envSchema = z.object({
 	STT_MODEL: z.string().min(1).default("small"),
 	/** Carpeta de audios retenidos (en prod, montada desde el NAS). */
 	AUDIO_DIR: z.string().min(1).default("./data/audios"),
+	/**
+	 * Captura por voz. Necesita Python + ffmpeg + un Ollama alcanzable, así que
+	 * en serverless (Vercel) no puede correr: ponlo a `false` y la UI esconde el
+	 * micro en vez de fallar al pulsarlo.
+	 */
+	VOICE_ENABLED: z
+		.enum(["true", "false"])
+		.default("true")
+		.transform((value) => value === "true"),
 	/** Token de GitHub con scope mínimo (Fase 6). Nunca loggearlo. */
 	GITHUB_TOKEN: z.string().min(1).optional(),
 	/** Polling de smart commits en segundos; 0 = desactivado. */
@@ -77,6 +93,14 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 		throw new Error(`configuración de entorno inválida — ${issues}`);
 	}
 	const env = parsed.data;
+
+	// Turso sin token conecta pero falla en la primera consulta, ya desplegado:
+	// mejor no arrancar y decir exactamente qué falta.
+	if (env.DATABASE_URL.startsWith("libsql://") && !env.DATABASE_AUTH_TOKEN) {
+		throw new Error(
+			"configuración de entorno inválida — DATABASE_URL apunta a Turso (libsql://) y falta DATABASE_AUTH_TOKEN",
+		);
+	}
 
 	// Reglas cruzadas de la auth: en producción no se despliega sin login, y a
 	// medias tampoco se arranca (media configuración = falsa sensación de seguridad).
