@@ -1,4 +1,4 @@
-import { buildApp } from "./app.js";
+import { buildApp } from "./build-app.js";
 import { authConfigFromEnv, loadEnv } from "./config/env.js";
 import { createDbClient } from "./db/client.js";
 import { migrateUp } from "./db/migrations.js";

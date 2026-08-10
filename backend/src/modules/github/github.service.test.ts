@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildApp } from "../../app.js";
+import { buildApp } from "../../build-app.js";
 import { createDbClient } from "../../db/client.js";
 import { migrateUp } from "../../db/migrations.js";
 import { migrations } from "../../db/migrations/index.js";

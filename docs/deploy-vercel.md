@@ -88,6 +88,20 @@ claude mcp add --transport http ganttero https://<tu-app>.vercel.app/api/mcp \
 
 ---
 
+## Si algo falla
+
+| Síntoma | Causa |
+|---|---|
+| `Project framework is set to "services", but no services are declared` | El **Root Directory** del proyecto apunta a una subcarpeta. `vercel.json` está en la raíz del repo: deja el Root Directory vacío. Ojo con la sugerencia de importación de Vercel, que propone un proyecto por carpeta. |
+| `Invalid export found in module ".../app.mjs" — The default export must be a function or server` | Vercel busca el entrypoint del backend en los nombres `app`, `index` y `server` (raíz o `src/`). Por eso la fábrica se llama **`build-app.ts`** y no `app.ts`: el entrypoint es `src/index.ts`, el único que llama a `listen()`. **No renombres `build-app.ts`.** |
+| El login no persiste | `AUTH_COOKIE_SECURE` debe ser `true` en Vercel (HTTPS). |
+| El backend no arranca | Revisa los logs de runtime: casi siempre falta alguna `AUTH_*` con `NODE_ENV=production`, o el par `DATABASE_URL`/`DATABASE_AUTH_TOKEN`. |
+
+> **Un solo proyecto de Vercel, no dos.** La sesión es una cookie `HttpOnly` y el
+> frontend llama a `/api` en el mismo origen. Separar frontend y backend en dos
+> proyectos los pone en dominios distintos y rompe el login: haría falta
+> `SameSite=None`, CORS con credenciales y una URL absoluta en el cliente.
+
 ## Notas y limitaciones
 
 - **La voz no se puede portar tal cual.** Depende de un binario de Python
