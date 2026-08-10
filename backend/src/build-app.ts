@@ -1,3 +1,12 @@
+/**
+ * Fábrica de la app (sin escuchar): la usan `index.ts` y todos los tests.
+ *
+ * ⚠️ El fichero NO puede llamarse `app.ts`, `server.ts` ni `index.ts`: Vercel
+ * busca el entrypoint del backend con esos tres nombres (en la raíz o en
+ * `src/`) y se quedaba con este, que solo exporta `buildApp` y no arranca nada
+ * — «The default export must be a function or server». El entrypoint es
+ * `index.ts`, el único que llama a `listen()`.
+ */
 import Fastify, { type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import type { Client } from "./db/client.js";
@@ -25,9 +34,9 @@ import { ItemsRepo } from "./modules/items/items.repo.js";
 import { itemsRoutes } from "./modules/items/items.routes.js";
 import { ItemsService } from "./modules/items/items.service.js";
 import { kanbanRoutes } from "./modules/kanban/kanban.routes.js";
+import { KanbanService } from "./modules/kanban/kanban.service.js";
 import { MCP_PATH, mcpRoutes } from "./modules/mcp/mcp.routes.js";
 import { McpService } from "./modules/mcp/mcp.service.js";
-import { KanbanService } from "./modules/kanban/kanban.service.js";
 import { ProjectsRepo } from "./modules/projects/projects.repo.js";
 import { projectsRoutes } from "./modules/projects/projects.routes.js";
 import { ProjectsService } from "./modules/projects/projects.service.js";
