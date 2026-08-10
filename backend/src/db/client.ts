@@ -16,8 +16,23 @@ export async function createDbClient(
 	authToken?: string,
 ): Promise<Client> {
 	if (url.startsWith("file:")) {
-		// SQLite no crea directorios: sin esto, ./data/ inexistente = error 14.
-		await mkdir(dirname(url.slice("file:".length)), { recursive: true });
+		const dir = dirname(url.slice("file:".length));
+		try {
+			// SQLite no crea directorios: sin esto, ./data/ inexistente = error 14.
+			await mkdir(dir, { recursive: true });
+		} catch (error) {
+			// En serverless el disco es de solo lectura salvo /tmp, así que el
+			// ENOENT/EROFS pelado no dice nada útil: aquí es que falta configurar
+			// una base de datos remota.
+			const code = (error as NodeJS.ErrnoException).code;
+			if (code === "ENOENT" || code === "EROFS" || code === "EACCES") {
+				throw new Error(
+					`no se puede crear el directorio de la base de datos (${dir}): el sistema de ficheros es de solo lectura. En un despliegue serverless usa Turso — DATABASE_URL=libsql://… y DATABASE_AUTH_TOKEN`,
+					{ cause: error },
+				);
+			}
+			throw error;
+		}
 	}
 	const db = createClient({ url, ...(authToken ? { authToken } : {}) });
 	// En Turso el PRAGMA viaja como cualquier sentencia y la conexión es HTTP:

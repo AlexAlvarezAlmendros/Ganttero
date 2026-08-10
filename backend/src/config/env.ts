@@ -22,6 +22,11 @@ const envSchema = z.object({
 	DATABASE_URL: z.string().min(1).default("file:./data/ganttero.db"),
 	/** Token de Turso. Obligatorio con `libsql://`. Nunca loggearlo. */
 	DATABASE_AUTH_TOKEN: z.string().min(1).optional(),
+	/**
+	 * La pone Vercel en sus builds y en runtime. Solo se usa para detectar que
+	 * estamos en serverless y avisar de configuraciones imposibles ahí.
+	 */
+	VERCEL: z.string().optional(),
 	/** Ollama del homeserver para la captura por voz (Fase 5). */
 	OLLAMA_BASE_URL: z
 		.string()
@@ -93,6 +98,14 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 		throw new Error(`configuración de entorno inválida — ${issues}`);
 	}
 	const env = parsed.data;
+
+	// En serverless el disco es de solo lectura: una DB en fichero no puede
+	// funcionar, y sin esto el fallo es un ENOENT de mkdir sin contexto.
+	if (env.VERCEL && env.DATABASE_URL.startsWith("file:")) {
+		throw new Error(
+			"configuración de entorno inválida — DATABASE_URL apunta a un fichero y en Vercel el disco es de solo lectura; usa Turso (DATABASE_URL=libsql://… y DATABASE_AUTH_TOKEN)",
+		);
+	}
 
 	// Turso sin token conecta pero falla en la primera consulta, ya desplegado:
 	// mejor no arrancar y decir exactamente qué falta.

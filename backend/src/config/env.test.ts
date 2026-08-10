@@ -52,6 +52,26 @@ describe("loadEnv — Turso y capacidades del despliegue", () => {
 		}
 	});
 
+	it("en Vercel rechaza una base de datos en fichero", () => {
+		expect(() =>
+			loadEnv({ VERCEL: "1", DATABASE_URL: "file:./data/ganttero.db" }),
+		).toThrow(/solo lectura|Turso/);
+	});
+
+	it("en Vercel acepta Turso con su token", () => {
+		expect(() =>
+			loadEnv({
+				VERCEL: "1",
+				DATABASE_URL: "libsql://ganttero.turso.io",
+				DATABASE_AUTH_TOKEN: "un-token",
+			}),
+		).not.toThrow();
+	});
+
+	it("fuera de Vercel el fichero sigue siendo el valor por defecto", () => {
+		expect(loadEnv({}).DATABASE_URL).toBe("file:./data/ganttero.db");
+	});
+
 	it("la voz viene activada y se apaga explícitamente", () => {
 		expect(loadEnv({}).VOICE_ENABLED).toBe(true);
 		expect(loadEnv({ VOICE_ENABLED: "false" }).VOICE_ENABLED).toBe(false);
