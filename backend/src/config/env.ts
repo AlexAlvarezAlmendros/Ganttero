@@ -23,6 +23,12 @@ const envSchema = z.object({
 	/** Token de Turso. Obligatorio con `libsql://`. Nunca loggearlo. */
 	DATABASE_AUTH_TOKEN: z.string().min(1).optional(),
 	/**
+	 * Alias que inyecta la integración nativa Turso ↔ Vercel. Se aceptan para
+	 * no tener que duplicar las variables a mano; `DATABASE_*` manda si está.
+	 */
+	TURSO_DATABASE_URL: z.string().min(1).optional(),
+	TURSO_AUTH_TOKEN: z.string().min(1).optional(),
+	/**
 	 * La pone Vercel en sus builds y en runtime. Solo se usa para detectar que
 	 * estamos en serverless y avisar de configuraciones imposibles ahí.
 	 */
@@ -88,8 +94,24 @@ const AUTH_KEYS = [
 
 export type Env = z.infer<typeof envSchema>;
 
+/**
+ * La integración Turso ↔ Vercel publica `TURSO_DATABASE_URL` y
+ * `TURSO_AUTH_TOKEN`. Se mapean a las nuestras para que el despliegue funcione
+ * sin duplicar nada; si alguien define `DATABASE_*` explícitamente, gana esa.
+ */
+function withTursoAliases(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+	const merged: NodeJS.ProcessEnv = { ...source };
+	if (!merged.DATABASE_URL && merged.TURSO_DATABASE_URL) {
+		merged.DATABASE_URL = merged.TURSO_DATABASE_URL;
+	}
+	if (!merged.DATABASE_AUTH_TOKEN && merged.TURSO_AUTH_TOKEN) {
+		merged.DATABASE_AUTH_TOKEN = merged.TURSO_AUTH_TOKEN;
+	}
+	return merged;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-	const parsed = envSchema.safeParse(source);
+	const parsed = envSchema.safeParse(withTursoAliases(source));
 	if (!parsed.success) {
 		// Solo nombres de variable y motivo: jamás volcar valores al error/log.
 		const issues = parsed.error.issues

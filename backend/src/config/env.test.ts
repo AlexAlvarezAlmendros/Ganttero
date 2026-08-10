@@ -52,6 +52,42 @@ describe("loadEnv — Turso y capacidades del despliegue", () => {
 		}
 	});
 
+	it("acepta los alias de la integración Turso ↔ Vercel", () => {
+		const env = loadEnv({
+			TURSO_DATABASE_URL: "libsql://ganttero-poio.turso.io",
+			TURSO_AUTH_TOKEN: "token-de-la-integracion",
+		});
+		expect(env.DATABASE_URL).toBe("libsql://ganttero-poio.turso.io");
+		expect(env.DATABASE_AUTH_TOKEN).toBe("token-de-la-integracion");
+	});
+
+	it("los alias bastan para arrancar en Vercel", () => {
+		expect(() =>
+			loadEnv({
+				VERCEL: "1",
+				TURSO_DATABASE_URL: "libsql://ganttero-poio.turso.io",
+				TURSO_AUTH_TOKEN: "token-de-la-integracion",
+			}),
+		).not.toThrow();
+	});
+
+	it("DATABASE_URL explícita gana al alias", () => {
+		const env = loadEnv({
+			DATABASE_URL: "libsql://elegida.turso.io",
+			DATABASE_AUTH_TOKEN: "token-elegido",
+			TURSO_DATABASE_URL: "libsql://del-alias.turso.io",
+			TURSO_AUTH_TOKEN: "token-del-alias",
+		});
+		expect(env.DATABASE_URL).toBe("libsql://elegida.turso.io");
+		expect(env.DATABASE_AUTH_TOKEN).toBe("token-elegido");
+	});
+
+	it("el alias de URL sin su token sigue siendo un error", () => {
+		expect(() =>
+			loadEnv({ TURSO_DATABASE_URL: "libsql://ganttero-poio.turso.io" }),
+		).toThrow(/DATABASE_AUTH_TOKEN/);
+	});
+
 	it("en Vercel rechaza una base de datos en fichero", () => {
 		expect(() =>
 			loadEnv({ VERCEL: "1", DATABASE_URL: "file:./data/ganttero.db" }),

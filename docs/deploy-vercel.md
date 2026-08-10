@@ -31,6 +31,11 @@ No hay que crear tablas a mano: **el backend migra al arrancar**, igual que en
 el homeserver. El runner tolera que dos instancias arranquen a la vez y compitan
 por la misma migración.
 
+> **Si usas la integración nativa Turso ↔ Vercel**, no tienes que copiar nada:
+> publica `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN`, y el backend las acepta
+> como alias de `DATABASE_URL` / `DATABASE_AUTH_TOKEN`. Si defines las nuestras
+> explícitamente, esas mandan.
+
 ## 2. Importar el repo en Vercel
 
 El `vercel.json` de la raíz ya declara los dos servicios y su enrutado:
@@ -47,7 +52,7 @@ En **Project Settings → Environment Variables**:
 
 | Variable | Valor | Por qué |
 |---|---|---|
-| `DATABASE_URL` | `libsql://ganttero-<org>.turso.io` | Turso |
+| `DATABASE_URL` | `libsql://ganttero-<org>.turso.io` | Turso. **Si usas la integración Turso ↔ Vercel no la pongas**: sus `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` valen tal cual |
 | `DATABASE_AUTH_TOKEN` | el token del paso 1 | Turso lo exige; sin él el backend **no arranca** |
 | `NODE_ENV` | `production` | Obliga a que exista el login |
 | `AUTH_USERNAME` | tu usuario | |
