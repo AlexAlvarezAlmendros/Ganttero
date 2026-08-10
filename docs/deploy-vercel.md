@@ -31,6 +31,11 @@ No hay que crear tablas a mano: **el backend migra al arrancar**, igual que en
 el homeserver. El runner tolera que dos instancias arranquen a la vez y compitan
 por la misma migración.
 
+> **Si usas la integración nativa Turso ↔ Vercel**, no tienes que copiar nada:
+> publica `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN`, y el backend las acepta
+> como alias de `DATABASE_URL` / `DATABASE_AUTH_TOKEN`. Si defines las nuestras
+> explícitamente, esas mandan.
+
 ## 2. Importar el repo en Vercel
 
 El `vercel.json` de la raíz ya declara los dos servicios y su enrutado:
@@ -47,7 +52,7 @@ En **Project Settings → Environment Variables**:
 
 | Variable | Valor | Por qué |
 |---|---|---|
-| `DATABASE_URL` | `libsql://ganttero-<org>.turso.io` | Turso |
+| `DATABASE_URL` | `libsql://ganttero-<org>.turso.io` | Turso. **Si usas la integración Turso ↔ Vercel no la pongas**: sus `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` valen tal cual |
 | `DATABASE_AUTH_TOKEN` | el token del paso 1 | Turso lo exige; sin él el backend **no arranca** |
 | `NODE_ENV` | `production` | Obliga a que exista el login |
 | `AUTH_USERNAME` | tu usuario | |
@@ -95,7 +100,9 @@ claude mcp add --transport http ganttero https://<tu-app>.vercel.app/api/mcp \
 | `Project framework is set to "services", but no services are declared` | El **Root Directory** del proyecto apunta a una subcarpeta. `vercel.json` está en la raíz del repo: deja el Root Directory vacío. Ojo con la sugerencia de importación de Vercel, que propone un proyecto por carpeta. |
 | `Invalid export found in module ".../app.mjs" — The default export must be a function or server` | Vercel escanea `app`, `index`, `server` y `main` (raíz o `src/`) y se quedaba con la fábrica, que no arranca nada. Por eso se llama **`build-app.ts`** y no `app.ts`. **No la renombres.** |
 | `No entrypoint found in "/vercel/path0/backend"` | El escaneo por nombre no encontró `src/index.ts` aunque existe. Por eso `backend/package.json` declara **`"main": "src/index.ts"`**, que es la vía explícita que sugiere el propio error y no depende de la detección. **No quites ese `main`** (no lo usa nada más: Docker arranca con `node dist/index.js` vía el script `start`). |
+| `ENOENT: no such file or directory, mkdir './data'` | Falta `DATABASE_URL`: se quedó el valor por defecto (`file:…`) y en Vercel el disco es de solo lectura. Configura Turso. Desde ahora el backend lo detecta al cargar la configuración y lo dice, en vez de reventar con el `ENOENT`. |
 | El login no persiste | `AUTH_COOKIE_SECURE` debe ser `true` en Vercel (HTTPS). |
+| Todo responde 302 / pide login de Vercel | Es la **protección de despliegue** (SSO), no la app. Está en Settings → Deployment Protection. Con ella activa, el endpoint MCP no funciona desde un agente: necesita dominio propio o desactivarla. |
 | El backend no arranca | Revisa los logs de runtime: casi siempre falta alguna `AUTH_*` con `NODE_ENV=production`, o el par `DATABASE_URL`/`DATABASE_AUTH_TOKEN`. |
 
 > **Un solo proyecto de Vercel, no dos.** La sesión es una cookie `HttpOnly` y el

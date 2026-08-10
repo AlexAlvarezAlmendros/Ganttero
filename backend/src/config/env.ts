@@ -22,6 +22,17 @@ const envSchema = z.object({
 	DATABASE_URL: z.string().min(1).default("file:./data/ganttero.db"),
 	/** Token de Turso. Obligatorio con `libsql://`. Nunca loggearlo. */
 	DATABASE_AUTH_TOKEN: z.string().min(1).optional(),
+	/**
+	 * Alias que inyecta la integración nativa Turso ↔ Vercel. Se aceptan para
+	 * no tener que duplicar las variables a mano; `DATABASE_*` manda si está.
+	 */
+	TURSO_DATABASE_URL: z.string().min(1).optional(),
+	TURSO_AUTH_TOKEN: z.string().min(1).optional(),
+	/**
+	 * La pone Vercel en sus builds y en runtime. Solo se usa para detectar que
+	 * estamos en serverless y avisar de configuraciones imposibles ahí.
+	 */
+	VERCEL: z.string().optional(),
 	/** Ollama del homeserver para la captura por voz (Fase 5). */
 	OLLAMA_BASE_URL: z
 		.string()
@@ -83,8 +94,24 @@ const AUTH_KEYS = [
 
 export type Env = z.infer<typeof envSchema>;
 
+/**
+ * La integración Turso ↔ Vercel publica `TURSO_DATABASE_URL` y
+ * `TURSO_AUTH_TOKEN`. Se mapean a las nuestras para que el despliegue funcione
+ * sin duplicar nada; si alguien define `DATABASE_*` explícitamente, gana esa.
+ */
+function withTursoAliases(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+	const merged: NodeJS.ProcessEnv = { ...source };
+	if (!merged.DATABASE_URL && merged.TURSO_DATABASE_URL) {
+		merged.DATABASE_URL = merged.TURSO_DATABASE_URL;
+	}
+	if (!merged.DATABASE_AUTH_TOKEN && merged.TURSO_AUTH_TOKEN) {
+		merged.DATABASE_AUTH_TOKEN = merged.TURSO_AUTH_TOKEN;
+	}
+	return merged;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-	const parsed = envSchema.safeParse(source);
+	const parsed = envSchema.safeParse(withTursoAliases(source));
 	if (!parsed.success) {
 		// Solo nombres de variable y motivo: jamás volcar valores al error/log.
 		const issues = parsed.error.issues
@@ -93,6 +120,14 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 		throw new Error(`configuración de entorno inválida — ${issues}`);
 	}
 	const env = parsed.data;
+
+	// En serverless el disco es de solo lectura: una DB en fichero no puede
+	// funcionar, y sin esto el fallo es un ENOENT de mkdir sin contexto.
+	if (env.VERCEL && env.DATABASE_URL.startsWith("file:")) {
+		throw new Error(
+			"configuración de entorno inválida — DATABASE_URL apunta a un fichero y en Vercel el disco es de solo lectura; usa Turso (DATABASE_URL=libsql://… y DATABASE_AUTH_TOKEN)",
+		);
+	}
 
 	// Turso sin token conecta pero falla en la primera consulta, ya desplegado:
 	// mejor no arrancar y decir exactamente qué falta.
