@@ -18,6 +18,46 @@ function authEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
 	};
 }
 
+describe("loadEnv — Turso y capacidades del despliegue", () => {
+	it("exige DATABASE_AUTH_TOKEN cuando la URL es de Turso", () => {
+		expect(() =>
+			loadEnv({ DATABASE_URL: "libsql://ganttero-poio.turso.io" }),
+		).toThrow(/DATABASE_AUTH_TOKEN/);
+	});
+
+	it("acepta Turso con su token", () => {
+		const env = loadEnv({
+			DATABASE_URL: "libsql://ganttero-poio.turso.io",
+			DATABASE_AUTH_TOKEN: "un-token-de-turso",
+		});
+		expect(env.DATABASE_AUTH_TOKEN).toBe("un-token-de-turso");
+	});
+
+	it("no exige token al self-hosted (file: y ws:)", () => {
+		expect(
+			loadEnv({ DATABASE_URL: "file:./data/x.db" }).DATABASE_AUTH_TOKEN,
+		).toBeUndefined();
+		expect(() => loadEnv({ DATABASE_URL: "ws://nas:8080" })).not.toThrow();
+	});
+
+	it("el error de Turso no filtra el valor del token", () => {
+		try {
+			loadEnv({
+				DATABASE_URL: "libsql://ganttero-poio.turso.io",
+				DATABASE_AUTH_TOKEN: "",
+			});
+			expect.unreachable("debería haber lanzado");
+		} catch (error) {
+			expect((error as Error).message).not.toContain("ganttero-poio");
+		}
+	});
+
+	it("la voz viene activada y se apaga explícitamente", () => {
+		expect(loadEnv({}).VOICE_ENABLED).toBe(true);
+		expect(loadEnv({ VOICE_ENABLED: "false" }).VOICE_ENABLED).toBe(false);
+	});
+});
+
 describe("loadEnv", () => {
 	it("aplica los valores por defecto con un entorno vacío", () => {
 		const env = loadEnv({});

@@ -87,6 +87,40 @@ describe("migrateUp / migrateDown", () => {
 		expect(await migrateDown(db, migrations)).toEqual([]);
 	});
 
+	it("tolera que otra instancia gane la carrera (arranques concurrentes)", async () => {
+		// Serverless: cada instancia migra al bootear. Simulamos que la nuestra
+		// falla porque otra ya creó la tabla y registró la migración.
+		const [first] = testMigrations();
+		if (!first) throw new Error("fixture roto");
+		const carrera = {
+			...first,
+			up: async (client: typeof db) => {
+				await first.up(client);
+				await client.execute({
+					sql: "INSERT INTO schema_migrations (id, name, applied_at) VALUES (?, ?, ?)",
+					args: [first.id, first.name, "2026-08-09T00:00:00.000Z"],
+				});
+				throw new Error("table already exists");
+			},
+		};
+
+		// No lanza: al releer, la migración consta como aplicada.
+		await expect(migrateUp(db, [carrera])).resolves.toEqual([]);
+	});
+
+	it("un fallo real de migración sí sube", async () => {
+		const [first] = testMigrations();
+		if (!first) throw new Error("fixture roto");
+		const rota = {
+			...first,
+			up: async () => {
+				throw new Error("SQL inválido");
+			},
+		};
+
+		await expect(migrateUp(db, [rota])).rejects.toThrow(/SQL inválido/);
+	});
+
 	it("rechaza listas con ids duplicados o desordenados", async () => {
 		const [first, second] = testMigrations();
 		if (!first || !second) throw new Error("fixture roto");

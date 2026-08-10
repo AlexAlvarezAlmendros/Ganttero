@@ -66,11 +66,22 @@ export async function migrateUp(
 		if (applied.has(migration.id)) {
 			continue;
 		}
-		await migration.up(db);
-		await db.execute({
-			sql: "INSERT INTO schema_migrations (id, name, applied_at) VALUES (?, ?, ?)",
-			args: [migration.id, migration.name, now().toISOString()],
-		});
+		try {
+			await migration.up(db);
+			await db.execute({
+				sql: "INSERT INTO schema_migrations (id, name, applied_at) VALUES (?, ?, ?)",
+				args: [migration.id, migration.name, now().toISOString()],
+			});
+		} catch (error) {
+			// Dos instancias pueden arrancar a la vez (serverless: cada una migra
+			// al bootear) y competir por la misma migración. Si al releer resulta
+			// que otra la aplicó, no es un fallo: seguimos. Cualquier otro error sí.
+			if (!(await appliedIds(db)).has(migration.id)) {
+				throw error;
+			}
+			log(`= ${migration.id} ${migration.name} (la aplicó otra instancia)`);
+			continue;
+		}
 		log(`↑ ${migration.id} ${migration.name}`);
 		done.push(migration.name);
 	}

@@ -132,6 +132,17 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
 		app.register(disabledAuthRoutes());
 	}
 
+	// Qué sabe hacer ESTE despliegue. Self-hosted lo tiene todo; en Vercel no
+	// hay Python/ffmpeg para la voz ni proceso vivo para el polling, así que la
+	// UI pregunta en vez de asumir (y esconde el micro en vez de fallar).
+	app.get("/capabilities", async () => ({
+		voice: voice !== undefined,
+		describer: describer !== undefined,
+		github: github !== undefined,
+		github_polling: (github?.status.poll_seconds ?? 0) > 0,
+		mcp: mcp !== undefined,
+	}));
+
 	app.get("/health", async (_request, reply) => {
 		if (!db) {
 			return { status: "ok", db: "none" };
