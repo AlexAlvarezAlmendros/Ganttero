@@ -93,7 +93,8 @@ claude mcp add --transport http ganttero https://<tu-app>.vercel.app/api/mcp \
 | Síntoma | Causa |
 |---|---|
 | `Project framework is set to "services", but no services are declared` | El **Root Directory** del proyecto apunta a una subcarpeta. `vercel.json` está en la raíz del repo: deja el Root Directory vacío. Ojo con la sugerencia de importación de Vercel, que propone un proyecto por carpeta. |
-| `Invalid export found in module ".../app.mjs" — The default export must be a function or server` | Vercel busca el entrypoint del backend en los nombres `app`, `index` y `server` (raíz o `src/`). Por eso la fábrica se llama **`build-app.ts`** y no `app.ts`: el entrypoint es `src/index.ts`, el único que llama a `listen()`. **No renombres `build-app.ts`.** |
+| `Invalid export found in module ".../app.mjs" — The default export must be a function or server` | Vercel escanea `app`, `index`, `server` y `main` (raíz o `src/`) y se quedaba con la fábrica, que no arranca nada. Por eso se llama **`build-app.ts`** y no `app.ts`. **No la renombres.** |
+| `No entrypoint found in "/vercel/path0/backend"` | El escaneo por nombre no encontró `src/index.ts` aunque existe. Por eso `backend/package.json` declara **`"main": "src/index.ts"`**, que es la vía explícita que sugiere el propio error y no depende de la detección. **No quites ese `main`** (no lo usa nada más: Docker arranca con `node dist/index.js` vía el script `start`). |
 | El login no persiste | `AUTH_COOKIE_SECURE` debe ser `true` en Vercel (HTTPS). |
 | El backend no arranca | Revisa los logs de runtime: casi siempre falta alguna `AUTH_*` con `NODE_ENV=production`, o el par `DATABASE_URL`/`DATABASE_AUTH_TOKEN`. |
 
