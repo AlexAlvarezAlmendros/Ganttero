@@ -108,6 +108,29 @@ describe("loadEnv — Turso y capacidades del despliegue", () => {
 		expect(loadEnv({}).DATABASE_URL).toBe("file:./data/ganttero.db");
 	});
 
+	it("migra al arrancar en self-hosted, pero no bajo Vercel", () => {
+		expect(loadEnv({}).MIGRATE_ON_BOOT).toBe(true);
+		expect(
+			loadEnv({
+				VERCEL: "1",
+				DATABASE_URL: "libsql://x.turso.io",
+				DATABASE_AUTH_TOKEN: "t",
+			}).MIGRATE_ON_BOOT,
+		).toBe(false);
+	});
+
+	it("MIGRATE_ON_BOOT explícito manda sobre el default", () => {
+		expect(loadEnv({ MIGRATE_ON_BOOT: "false" }).MIGRATE_ON_BOOT).toBe(false);
+		expect(
+			loadEnv({
+				VERCEL: "1",
+				MIGRATE_ON_BOOT: "true",
+				DATABASE_URL: "libsql://x.turso.io",
+				DATABASE_AUTH_TOKEN: "t",
+			}).MIGRATE_ON_BOOT,
+		).toBe(true);
+	});
+
 	it("la voz viene activada y se apaga explícitamente", () => {
 		expect(loadEnv({}).VOICE_ENABLED).toBe(true);
 		expect(loadEnv({ VOICE_ENABLED: "false" }).VOICE_ENABLED).toBe(false);
