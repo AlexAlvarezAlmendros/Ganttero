@@ -14,6 +14,8 @@ import { type Client, createClient } from "@libsql/client";
 export async function createDbClient(
 	url: string,
 	authToken?: string,
+	/** Tope del primer ping. Inyectable para no meter esperas en los tests. */
+	connectTimeoutMs = 10_000,
 ): Promise<Client> {
 	if (url.startsWith("file:")) {
 		const dir = dirname(url.slice("file:".length));
@@ -37,8 +39,43 @@ export async function createDbClient(
 	const db = createClient({ url, ...(authToken ? { authToken } : {}) });
 	// En Turso el PRAGMA viaja como cualquier sentencia y la conexión es HTTP:
 	// se aplica igual, pero aquí es además el primer ping que valida la URL.
-	await db.execute("PRAGMA foreign_keys = ON");
+	// Con tope: si la base remota no contesta, en serverless el arranque se
+	// come el presupuesto de la petición y la plataforma devuelve un 500 sin
+	// una sola línea de log. Mejor fallar pronto y diciendo qué pasa.
+	await withTimeout(
+		db.execute("PRAGMA foreign_keys = ON"),
+		connectTimeoutMs,
+		`la base de datos no respondió en ${connectTimeoutMs} ms (${redactUrl(url)}). Revisa DATABASE_URL/DATABASE_AUTH_TOKEN y que la base exista`,
+	);
 	return db;
+}
+
+/** Host de la URL, sin credenciales ni ruta: seguro para logs y errores. */
+function redactUrl(url: string): string {
+	try {
+		return new URL(url).host || url.split(":")[0] || "?";
+	} catch {
+		return url.split(":")[0] ?? "?";
+	}
+}
+
+async function withTimeout<T>(
+	promise: Promise<T>,
+	ms: number,
+	message: string,
+): Promise<T> {
+	let timer: NodeJS.Timeout | undefined;
+	try {
+		return await Promise.race([
+			promise,
+			new Promise<never>((_resolve, reject) => {
+				timer = setTimeout(() => reject(new Error(message)), ms);
+			}),
+		]);
+	} finally {
+		// Sin esto el temporizador mantendría vivo el proceso hasta que venza.
+		if (timer) clearTimeout(timer);
+	}
 }
 
 export type { Client };

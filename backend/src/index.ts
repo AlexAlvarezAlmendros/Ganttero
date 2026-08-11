@@ -11,8 +11,24 @@ import { VoiceService } from "./modules/voice/voice.service.js";
 import { OllamaStructurer } from "./modules/voice/voice.structurer.js";
 import { PythonStt } from "./modules/voice/voice.stt.js";
 
+/**
+ * Traza del arranque. En serverless cada petición puede pagar un arranque en
+ * frío y, si algo se cuelga antes de `listen()`, la plataforma devuelve un 500
+ * sin una sola línea nuestra: sin estas marcas el fallo es invisible.
+ */
+const bootedAt = Date.now();
+const step = (name: string) =>
+	console.info(`[boot +${Date.now() - bootedAt}ms] ${name}`);
+
+step("cargando configuración");
 const env = loadEnv();
+step(
+	`configuración ok · db=${env.DATABASE_URL.split(":")[0]} · voz=${env.VOICE_ENABLED}`,
+);
+
+step("conectando a la base de datos");
 const db = await createDbClient(env.DATABASE_URL, env.DATABASE_AUTH_TOKEN);
+step("base de datos conectada");
 const voiceService = new VoiceService(
 	new PythonStt({
 		pythonBin: env.STT_PYTHON,
@@ -73,15 +89,17 @@ if (!authConfig) {
 }
 
 // Migraciones al arrancar: app self-hosted, sin paso de deploy separado.
+step("aplicando migraciones");
 const applied = await migrateUp(db, migrations, {
 	log: (message) => app.log.info(message),
 });
-if (applied.length > 0) {
-	app.log.info(`migraciones aplicadas: ${applied.join(", ")}`);
-}
+step(
+	`migraciones al día${applied.length > 0 ? `: ${applied.join(", ")}` : ""}`,
+);
 
 try {
 	await app.listen({ port: env.PORT, host: env.HOST });
+	step(`escuchando en ${env.HOST}:${env.PORT}`);
 } catch (error) {
 	app.log.error(error);
 	process.exit(1);
