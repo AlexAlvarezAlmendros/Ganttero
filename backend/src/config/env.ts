@@ -29,10 +29,20 @@ const envSchema = z.object({
 	TURSO_DATABASE_URL: z.string().min(1).optional(),
 	TURSO_AUTH_TOKEN: z.string().min(1).optional(),
 	/**
-	 * La pone Vercel en sus builds y en runtime. Solo se usa para detectar que
-	 * estamos en serverless y avisar de configuraciones imposibles ahí.
+	 * La pone Vercel en sus builds y en runtime. Se usa para detectar que
+	 * estamos en serverless y ajustar los defaults que allí no valen.
 	 */
 	VERCEL: z.string().optional(),
+	/**
+	 * Aplicar migraciones al arrancar. Correcto en el self-hosted (proceso
+	 * vivo, se paga una vez); en serverless cada arranque en frío las repetiría
+	 * antes de escuchar y agotaría el presupuesto de la petición. Por eso el
+	 * default es `false` bajo Vercel — allí se aplican con `db:migrate`.
+	 */
+	MIGRATE_ON_BOOT: z
+		.enum(["true", "false"])
+		.optional()
+		.transform((value) => (value === undefined ? undefined : value === "true")),
 	/** Ollama del homeserver para la captura por voz (Fase 5). */
 	OLLAMA_BASE_URL: z
 		.string()
@@ -121,6 +131,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 	}
 	const env = parsed.data;
 
+	// El default depende del destino: en Vercel, no migrar al arrancar.
+	const migrateOnBoot = env.MIGRATE_ON_BOOT ?? env.VERCEL === undefined;
+
 	// En serverless el disco es de solo lectura: una DB en fichero no puede
 	// funcionar, y sin esto el fallo es un ENOENT de mkdir sin contexto.
 	if (env.VERCEL && env.DATABASE_URL.startsWith("file:")) {
@@ -150,7 +163,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 			`configuración de entorno inválida — en producción son obligatorias: ${AUTH_KEYS.join(", ")}`,
 		);
 	}
-	return env;
+	return { ...env, MIGRATE_ON_BOOT: migrateOnBoot };
 }
 
 export interface AuthEnvConfig {

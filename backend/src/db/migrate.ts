@@ -11,7 +11,7 @@ import { migrations } from "./migrations/index.js";
 
 const command = process.argv[2];
 const env = loadEnv();
-const db = await createDbClient(env.DATABASE_URL);
+const db = await createDbClient(env.DATABASE_URL, env.DATABASE_AUTH_TOKEN);
 const log = (message: string) => console.log(message);
 
 if (command === "up") {

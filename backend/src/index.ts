@@ -1,3 +1,4 @@
+import { writeSync } from "node:fs";
 import { buildApp } from "./build-app.js";
 import { authConfigFromEnv, loadEnv } from "./config/env.js";
 import { createDbClient } from "./db/client.js";
@@ -17,8 +18,15 @@ import { PythonStt } from "./modules/voice/voice.stt.js";
  * sin una sola línea nuestra: sin estas marcas el fallo es invisible.
  */
 const bootedAt = Date.now();
-const step = (name: string) =>
-	console.info(`[boot +${Date.now() - bootedAt}ms] ${name}`);
+/**
+ * `writeSync` sobre el descriptor 1, no `console.info`: la salida por consola
+ * va a un pipe y queda bufferizada, así que si la plataforma mata el proceso
+ * por tiempo (que es justo el caso que queremos diagnosticar) esas líneas no
+ * llegan a escribirse nunca. Esto sí sobrevive.
+ */
+const step = (name: string) => {
+	writeSync(1, `[boot +${Date.now() - bootedAt}ms] ${name}\n`);
+};
 
 step("cargando configuración");
 const env = loadEnv();
@@ -88,14 +96,22 @@ if (!authConfig) {
 	);
 }
 
-// Migraciones al arrancar: app self-hosted, sin paso de deploy separado.
-step("aplicando migraciones");
-const applied = await migrateUp(db, migrations, {
-	log: (message) => app.log.info(message),
-});
-step(
-	`migraciones al día${applied.length > 0 ? `: ${applied.join(", ")}` : ""}`,
-);
+// Migraciones al arrancar: pensado para el self-hosted, donde el proceso vive
+// y esto se paga una vez. En serverless cada arranque en frío las repetiría
+// ANTES de escuchar, y una tanda de idas y venidas a la base remota se come el
+// presupuesto de la petición: la plataforma corta y la API no responde nunca.
+// Allí se aplican una sola vez, a mano: `pnpm --filter backend db:migrate`.
+if (env.MIGRATE_ON_BOOT) {
+	step("aplicando migraciones");
+	const applied = await migrateUp(db, migrations, {
+		log: (message) => app.log.info(message),
+	});
+	step(
+		`migraciones al día${applied.length > 0 ? `: ${applied.join(", ")}` : ""}`,
+	);
+} else {
+	step("migraciones omitidas (se aplican con db:migrate)");
+}
 
 try {
 	await app.listen({ port: env.PORT, host: env.HOST });

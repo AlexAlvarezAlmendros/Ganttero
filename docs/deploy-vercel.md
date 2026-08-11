@@ -27,9 +27,22 @@ turso db show ganttero --url          # libsql://ganttero-<org>.turso.io
 turso db tokens create ganttero       # el token de auth
 ```
 
-No hay que crear tablas a mano: **el backend migra al arrancar**, igual que en
-el homeserver. El runner tolera que dos instancias arranquen a la vez y compitan
-por la misma migración.
+Aplica el esquema **una vez**, desde tu máquina, apuntando a Turso:
+
+```bash
+cd backend
+DATABASE_URL=libsql://ganttero-<org>.turso.io \
+DATABASE_AUTH_TOKEN=<token> \
+pnpm db:migrate
+```
+
+> **Por qué a mano y no al arrancar.** En el homeserver el proceso vive y las
+> migraciones se pagan una vez, así que allí se siguen aplicando solas. En
+> serverless cada arranque en frío las repetiría **antes de escuchar**, y una
+> tanda de idas y venidas a la base remota se come el presupuesto de la
+> petición: la plataforma corta y la API no responde nunca. Por eso bajo Vercel
+> el backend no migra al arrancar (`MIGRATE_ON_BOOT` en `false` por defecto
+> allí). Repite este comando cuando añadas migraciones.
 
 > **Si usas la integración nativa Turso ↔ Vercel**, no tienes que copiar nada:
 > publica `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN`, y el backend las acepta
@@ -62,6 +75,7 @@ En **Project Settings → Environment Variables**:
 | `VOICE_ENABLED` | `false` | No hay Python ni ffmpeg; la UI esconde el micro |
 | `GITHUB_POLL_SECONDS` | `0` | No hay proceso vivo que haga polling |
 | `MCP_TOKEN` | `openssl rand -hex 32` *(opcional)* | Habilita el MCP para agentes |
+| `MIGRATE_ON_BOOT` | *(no la pongas)* | Bajo Vercel vale `false` sola; las migraciones se aplican con `db:migrate` |
 
 > ⚠️ `AUTH_COOKIE_SECURE=true` es lo contrario que en la LAN. En el homeserver
 > va en `false` (HTTP) y aquí en `true`; con el valor equivocado, o el navegador
@@ -103,6 +117,7 @@ claude mcp add --transport http ganttero https://<tu-app>.vercel.app/api/mcp \
 | `ENOENT: no such file or directory, mkdir './data'` | Falta `DATABASE_URL`: se quedó el valor por defecto (`file:…`) y en Vercel el disco es de solo lectura. Configura Turso. Desde ahora el backend lo detecta al cargar la configuración y lo dice, en vez de reventar con el `ENOENT`. |
 | El login no persiste | `AUTH_COOKIE_SECURE` debe ser `true` en Vercel (HTTPS). |
 | Todo responde 302 / pide login de Vercel | Es la **protección de despliegue** (SSO), no la app. Está en Settings → Deployment Protection. Con ella activa, el endpoint MCP no funciona desde un agente: necesita dominio propio o desactivarla. |
+| Toda ruta `/api/*` tarda ~30 s y acaba en 500 | El arranque no llega a `listen()` y la plataforma corta. Mira las marcas `[boot +Nms]` en los logs de runtime: la última indica el paso que se atasca. |
 | El backend no arranca | Revisa los logs de runtime: casi siempre falta alguna `AUTH_*` con `NODE_ENV=production`, o el par `DATABASE_URL`/`DATABASE_AUTH_TOKEN`. |
 
 > **Un solo proyecto de Vercel, no dos.** La sesión es una cookie `HttpOnly` y el
