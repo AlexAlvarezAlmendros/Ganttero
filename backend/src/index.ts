@@ -19,14 +19,24 @@ import { PythonStt } from "./modules/voice/voice.stt.js";
  */
 const bootedAt = Date.now();
 /**
- * `writeSync` sobre el descriptor 1, no `console.info`: la salida por consola
- * va a un pipe y queda bufferizada, así que si la plataforma mata el proceso
- * por tiempo (que es justo el caso que queremos diagnosticar) esas líneas no
- * llegan a escribirse nunca. Esto sí sobrevive.
+ * `writeSync` sobre **stderr**, no `console.info`:
+ * - la salida por consola va a un pipe con buffer, así que si la plataforma
+ *   mata el proceso por tiempo esas líneas no llegan a escribirse nunca;
+ * - y sobre fd 2, no fd 1, porque en Vercel los crashes (stderr) sí aparecen
+ *   en los logs mientras que lo escrito a stdout no, ni siquiera sin buffer.
  */
 const step = (name: string) => {
-	writeSync(1, `[boot +${Date.now() - bootedAt}ms] ${name}\n`);
+	writeSync(2, `[boot +${Date.now() - bootedAt}ms] ${name}\n`);
 };
+
+process.on("uncaughtException", (error) => {
+	writeSync(2, `[boot] excepción no capturada: ${error?.stack ?? error}\n`);
+	process.exit(1);
+});
+process.on("unhandledRejection", (reason) => {
+	writeSync(2, `[boot] promesa rechazada sin capturar: ${String(reason)}\n`);
+	process.exit(1);
+});
 
 step("cargando configuración");
 const env = loadEnv();
@@ -113,6 +123,12 @@ if (env.MIGRATE_ON_BOOT) {
 	step("migraciones omitidas (se aplican con db:migrate)");
 }
 
+// `ready()` monta rutas y hooks sin escuchar. Hace falta para que el servidor
+// que exportamos abajo esté listo para atender en cuanto lo invoquen.
+step("preparando la app");
+await app.ready();
+step("app preparada");
+
 try {
 	await app.listen({ port: env.PORT, host: env.HOST });
 	step(`escuchando en ${env.HOST}:${env.PORT}`);
@@ -140,3 +156,13 @@ if (env.GITHUB_POLL_SECONDS > 0) {
 	setInterval(poll, env.GITHUB_POLL_SECONDS * 1000);
 	void poll();
 }
+
+/**
+ * El servidor HTTP subyacente, como export por defecto.
+ *
+ * Vercel resuelve el entrypoint buscando «a function or server» exportado por
+ * defecto; el `listen()` de arriba es el camino alternativo y, por sí solo, no
+ * bastaba: la función se quedaba sin responder hasta que la plataforma cortaba.
+ * Se mantienen los dos, que no estorban: en el self-hosted manda el `listen()`.
+ */
+export default app.server;
